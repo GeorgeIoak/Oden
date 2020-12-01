@@ -123,19 +123,19 @@ def set_volume(volume):
 # LINE 4                 D0=X,D1=H,D2=L,D3=L,D4=L,D5=L,D6=L,D7=X 5
 # LINE 5 (TAPE)(LOOP)    D0=X,D1=L,D2=L,D3=L,D4=L,D5=H,D6=L,D7=X 6
 
-def bal1():
+def bal1(): #0xC1 / 0b1100 0001
     analogInput.port[0] = True
     analogInput.port[5] = False
     analogInput.port[6] = True
     analogInput.port[7] = True
 
-def bal2():
+def bal2(): #0x41 0b0100 0001
     analogInput.port[0] = True
     analogInput.port[5] = False
     analogInput.port[6] = True
     analogInput.port[7] = False
 
-def line1():
+def line1(): #0x10 0b0001 0000
     analogInput.port[1] = False
     analogInput.port[2] = False
     analogInput.port[3] = False
