@@ -6,10 +6,10 @@ import time
 import os
 import sys
 import spidev
+import smbus
 import evdev
 from evdev import InputDevice, categorize, ecodes
 import config
-from pcf8574 import PCF8574
 import RPi.GPIO as GPIO
 
 # Declare files to save status varialbe
@@ -31,36 +31,28 @@ analogInputs = ["BAL 1", "BAL 2", "LINE 1", "LINE 2",
 
 curInput = 0  # What Source Input are we currently at
 remCode = ''  # Current remote code with toggle bit masked off
-curVol = 0
+curVol = curVolLeft = curVolRight = 0
 old_vol = 0
 volStep = 10
-# Shouldn't need this but ...
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(27, GPIO.OUT)  # SPI1 CS pin, RPi pin 13
-GPIO.output(27, GPIO.HIGH)
 
 i2c_port_num = 1
 pcf_address = 0x38  #temp address from 0x3B PCF8574A: A0=H, A1=H, A2=L
-analogInput = PCF8574(i2c_port_num, pcf_address)
-analogInput.port = [bool(curInput & (1 << i))
-            for i in range(7, -1, -1)]  # Set all pins as outputs
-# analogInput.port = [bool(curInput & (1 << i)) for i in range(0, 8, 1)] # Set all pins as outputs
+analogInput = smbus.SMBus(1)
+analogInput.write_byte(pcf_address, 0x00) # Set PCF8574A to all outputs
+
 
 # Open SPI bus instance for PGA2320
 SPI_PORT = 1
 SPI_DEVICE = 0
 pga2320 = spidev.SpiDev()
 pga2320.open(SPI_PORT, SPI_DEVICE)
-pga2320.max_speed_hz = 10000000  # PGA2320 max SPI Speed is 6.25MHz
+pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 # pga2320.mode = 0b11 # was 3 in CircuitPython, can't change mode for SPI1
 
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
 device = InputDevice('/dev/input/event0')
 
 # Write volume to file
-
-
 def save_vol(vol):
     vol -= 40
     f = open('/home/volumio/bladelius/var/vol', 'w')
@@ -68,8 +60,6 @@ def save_vol(vol):
     f.close()
 
 # Get volume from file
-
-
 def get_vol():
     f = open('/home/volumio/bladelius/var/vol', 'r')
     a = int(f.read())
@@ -78,8 +68,6 @@ def get_vol():
     return a
 
 # Set volume function
-
-
 def set_volume(volume):
     gain = 31.5 - (0.5 * (255 - volume))
     dbgain = str(gain) + "dB"
@@ -92,8 +80,6 @@ def set_volume(volume):
             old_vol += 1
 
 # Set volume function
-
-
 def set_volume(volume):
     gain = 31.5 - (0.5 * (255 - volume))
     dbgain = str(gain) + "dB"
@@ -124,56 +110,25 @@ def set_volume(volume):
 # LINE 5 (TAPE)(LOOP)    D0=X,D1=L,D2=L,D3=L,D4=L,D5=H,D6=L,D7=X 6
 
 def bal1(): #0xC1 / 0b1100 0001
-    analogInput.port[0] = True
-    analogInput.port[5] = False
-    analogInput.port[6] = True
-    analogInput.port[7] = True
+    analogInput.write_byte(pcf_address, 0b11000001)
 
 def bal2(): #0x41 0b0100 0001
-    analogInput.port[0] = True
-    analogInput.port[5] = False
-    analogInput.port[6] = True
-    analogInput.port[7] = False
+    analogInput.write_byte(pcf_address, 0b01000001)
 
-def line1(): #0x10 0b0001 0000
-    analogInput.port[1] = False
-    analogInput.port[2] = False
-    analogInput.port[3] = False
-    analogInput.port[4] = True
-    analogInput.port[5] = False
-    analogInput.port[6] = False
+def line1(): #0x11 0b0001 0001
+    analogInput.write_byte(pcf_address, 0b00010001)
 
-def line2():
-    analogInput.port[1] = False
-    analogInput.port[2] = False
-    analogInput.port[3] = True
-    analogInput.port[4] = False
-    analogInput.port[5] = False
-    analogInput.port[6] = False
+def line2(): #0x09 0b0000 1001
+    analogInput.write_byte(pcf_address, 0b00001001)
 
-def line3():
-    analogInput.port[1] = False
-    analogInput.port[2] = True
-    analogInput.port[3] = False
-    analogInput.port[4] = False
-    analogInput.port[5] = False
-    analogInput.port[6] = False
+def line3(): #0x05 0b0000 0101
+    analogInput.write_byte(pcf_address, 0b00000101)
 
-def line4():
-    analogInput.port[1] = True
-    analogInput.port[2] = False
-    analogInput.port[3] = False
-    analogInput.port[4] = False
-    analogInput.port[5] = False
-    analogInput.port[6] = False
+def line4(): #0x03 0b0000 0011
+    analogInput.write_byte(pcf_address, 0b00000011)
 
-def line5():
-    analogInput.port[1] = False
-    analogInput.port[2] = False
-    analogInput.port[3] = False
-    analogInput.port[4] = False
-    analogInput.port[5] = True
-    analogInput.port[6] = False
+def line5(): #0x21 0b0010 0001
+    analogInput.write_byte(pcf_address, 0b00100001)
 
 switcherDigital = { 
     0: bal1,
@@ -211,10 +166,7 @@ try:
                         else:
                             curVol -= volStep
                     print("Current volume is: ", curVol)
-                    GPIO.output(27, GPIO.LOW)
-                    pga2320.writebytes([curVol, curVol])
-                    pga2320.writebytes([curVol, curVol])  # just for safety measures
-                    GPIO.output(27, GPIO.HIGH)
+                    pga2320.writebytes([curVol, curVol, curVol, curVol])
                     # pga2320.close()
                     if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
                         if curInput == 6 and remCode == btnSrcUp:
@@ -231,11 +183,10 @@ try:
                                     curInput -= 1
                     setAnalogInput(curInput)
                     print("Current Input is: ", curInput)
-                    print(analogInput.port)
                     text = analogInputs[curInput]
                     print(text)
 finally:
     pga2320.close()
+    analogInput.close()
     device.close()
     GPIO.cleanup()
-
