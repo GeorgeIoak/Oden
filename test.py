@@ -7,7 +7,7 @@ import os
 import sys
 import spidev
 import smbus
-import evdev
+#import evdev
 from evdev import InputDevice, categorize, ecodes
 import config
 import RPi.GPIO as GPIO
@@ -50,7 +50,11 @@ pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 # pga2320.mode = 0b11 # was 3 in CircuitPython, can't change mode for SPI1
 
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
-device = InputDevice('/dev/input/event0')
+try:
+    IRsignal = InputDevice('/dev/input/event0')
+except (FileNotFoundError, PermissionError):
+    print("Something wrong with IR")
+
 
 # Write volume to file
 def save_vol(vol):
@@ -149,12 +153,12 @@ try:
     while True:
         #remCode = lirc.nextcode()
         #print(remCode)
-        for event in device.read_loop():
+        for event in IRsignal.read_loop():
             if event.type == ecodes.EV_KEY:
                 data = categorize(event)
                 print(event.value, hex(event.value), event.code, hex(event.code))
                 remCode = data.keycode #event.value
-                if data.keystate == 1: # Only on key down event
+                if data.keystate >= 1: # Only on key down event, 2 is held down
                     if (remCode == btnVolUp):
                         if (curVol >= 255):
                             curVol = curVol
@@ -188,5 +192,5 @@ try:
 finally:
     pga2320.close()
     analogInput.close()
-    device.close()
+    IRsignal.close()
     GPIO.cleanup()
