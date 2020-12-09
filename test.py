@@ -29,11 +29,23 @@ digitalInputs = ["SPDIF 1", "SPDIF 2", "OPTICAL 1",
 analogInputs = ["BAL 1", "BAL 2", "LINE 1", "LINE 2",
             "LINE 3", "LINE 4", "LINE 5"]
 
+volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
+            80, 84, 88, 92, 94, 96, 98, 100, 102, 104, 106, 108, 
+            110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 
+            132, 134, 136, 138, 140, 142, 144, 146, 148, 150, 152, 
+            154, 156, 158, 160, 162, 163, 164, 165, 166, 167, 168, 
+            169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 
+            180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 
+            191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 
+            202, 203, 204, 205, 206, 207, 208, 209, 210]
+
+
 curInput = 0  # What Source Input are we currently at
 remCode = ''  # Current remote code with toggle bit masked off
 curVol = curVolLeft = curVolRight = 0
-old_vol = 0
-volStep = 10
+old_vol = dbVol = 0
+volStep = 1
+volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 lookup table
 
 i2c_port_num = 1
 pcf_address = 0x38  #temp address from 0x3B PCF8574A: A0=H, A1=H, A2=L
@@ -160,7 +172,7 @@ try:
                 remCode = data.keycode #event.value
                 if data.keystate >= 1: # Only on key down event, 2 is held down
                     if (remCode == btnVolUp):
-                        if (curVol >= 255):
+                        if (curVol >= volMax):
                             curVol = curVol
                         else:
                             curVol += volStep
@@ -170,7 +182,8 @@ try:
                         else:
                             curVol -= volStep
                     print("Current volume is: ", curVol)
-                    pga2320.writebytes([curVol, curVol, curVol, curVol])
+                    dbVol = volTable[curVol]
+                    pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])
                     # pga2320.close()
                     if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
                         if curInput == 6 and remCode == btnSrcUp:
