@@ -1,0 +1,3 @@
+[SYSTEM]
+volume = 0
+input = LINE 1

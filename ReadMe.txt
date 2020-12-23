@@ -44,3 +44,11 @@ sudo nano uses /etc/triggerhappy/triggers.d/audio.conf
 
 #VOLUME DOWN
 #KEY_VOLUMEDOWN 1 /usr/local/bin/volumio volume minus
+
+# Set up RAM Drive
+sudo mkdir -p /mnt/ramdisk
+sudo chown -R volumio:volumio /mnt/ramdisk
+sudo mount -osize=1M -t tmpfs tmpfs /mnt/ramdisk
+# Make Ram Disk Automatic on Boot
+sudo nano /etc/fstab
+tmpfs /mnt/ramdisk tmpfs defaults,noatime,mode=755,uid=volumio,gid=volumio,size=1M 0 0

@@ -7,10 +7,8 @@ import os
 import sys
 import spidev
 import smbus
-#import evdev
 from evdev import InputDevice, categorize, ecodes
 import config
-import RPi.GPIO as GPIO
 
 # Declare files to save status varialbe
 file_mute = config.mute
@@ -206,4 +204,3 @@ finally:
     pga2320.close()
     analogInput.close()
     IRsignal.close()
-    GPIO.cleanup()
