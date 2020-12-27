@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 import requests
 import os
 import sys
-import time
 import threading
 import signal
 import json
@@ -17,9 +16,13 @@ import pycurl
 import pprint
 import subprocess
 import RPi.GPIO as GPIO
+import spidev
+import smbus
 from time import*
 from datetime import timedelta as timedelta
 from threading import Thread
+from evdev import InputDevice, categorize, ecodes
+from queue import Queue
 from socketIO_client import SocketIO
 from datetime import datetime as datetime
 from io import BytesIO 
@@ -28,9 +31,11 @@ from PIL import ImageDraw
 from PIL import ImageFont
 from modules.pushbutton import PushButton
 from modules.rotaryencoder import RotaryEncoder
+from modules.odenremote import*
 import uuid
 import numpy as np
 from ConfigurationFiles.PreConfiguration import*
+from ConfigurationFiles.config import*
 import urllib.request
 from urllib.parse import* #from urllib import*
 from urllib.parse import urlparse
@@ -48,10 +53,7 @@ sleep(5.0)
 #\____/\____/_/ /_/_/ /_/\__, /\__,_/_/   \__,_/\__/_/\____/_/ /_/  (_)  
 #                       /____/
 #
-if SpectrumActive == True:
-    ScreenList = ['Spectrum-Left', 'Spectrum-Center', 'Spectrum-Right', 'No-Spectrum', 'Modern', 'VU-Meter-1', 'VU-Meter-2', 'VU-Meter-Bar', 'Modern-simplistic']
-else:
-    ScreenList = ['No-Spectrum']
+ScreenList = ['No-Spectrum']
 
 NowPlayingLayoutSave=open('/home/volumio/NR1-UI/ConfigurationFiles/LayoutSet.txt').readline().rstrip()
 print('Layout selected during setup: ', NowPlayingLayout)
@@ -183,6 +185,13 @@ oled.bitrate = ''
 oled.repeatonce = False
 oled.shuffle = False
 oled.mute = False
+
+# Declare files to save status varialbe
+file_mute = mute
+file_vol = vol
+file_input = theinput
+file_power = power
+
 
 image = Image.new('RGB', (oled.WIDTH, oled.HEIGHT))  #for Pixelshift: (oled.WIDTH + 4, oled.HEIGHT + 4)) 
 oled.clear()
@@ -354,6 +363,8 @@ def SetState(status):
         oled.modal = MediaLibrarayInfo(oled.HEIGHT, oled.WIDTH)
     elif oled.state == STATE_SCREEN_MENU:
         oled.modal = ScreenSelectMenu(oled.HEIGHT, oled.WIDTH)
+    elif oled.state == STATE_OTHER_INPUT:
+        oled.modal = OtherInputScreen(oled.HEIGHT, oled.WIDTH)
 
 #________________________________________________________________________________________
 #________________________________________________________________________________________
@@ -934,6 +945,23 @@ class MediaLibrarayInfo():
         self.draw.text((oledtext23), oledPlaytimeIcon, font=mediaicon, fill='white')
         image.paste(self.image, (0, 0))
 
+class OtherInputScreen():
+    def __init__(self, height, width):
+        self.height = height
+        self.width = width
+
+    def UpdateInputScreen(self):
+        self.image = Image.new('RGB', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
+
+    def DrawOn(self, image):
+        self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
+        self.draw.text((oledtext03), curInput, font=fontClock, fill='white')
+        self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
+        self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
+        self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
+        image.paste(self.image, (0, 0))
+
 class MenuScreen():
     def __init__(self, height, width):
         self.height = height
@@ -1240,6 +1268,9 @@ def PlaypositionHelper():
 
 PlayPosHelp = threading.Thread(target=PlaypositionHelper, daemon=True)
 PlayPosHelp.start()
+
+remoteProcess = threading.Thread(target=listenRemote, daemon=True)
+remoteProcess.start()
 #________________________________________________________________________________________
 #________________________________________________________________________________________
 #	
@@ -1284,5 +1315,10 @@ while True:
         volumioIO.emit('stop')
         oled.modal.UpdateStandbyInfo()
         secvar = 0.0
+
+# This is for the added remote code
+    if not events.empty():
+        event = events.get_nowait()
+        print("the event is", event)
 
 sleep(0.02)

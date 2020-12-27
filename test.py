@@ -7,8 +7,11 @@ import os
 import sys
 import spidev
 import smbus
-from evdev import InputDevice, categorize, ecodes
 import config
+import threading
+from evdev import InputDevice, categorize, ecodes
+from threading import Thread
+from queue import Queue
 
 # Declare files to save status varialbe
 file_mute = config.mute
@@ -62,6 +65,7 @@ pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
 try:
     IRsignal = InputDevice('/dev/input/event0')
+    events = Queue()
 except (FileNotFoundError, PermissionError):
     print("Something wrong with IR")
 
@@ -158,49 +162,64 @@ def setAnalogInput(theInput):
     func = switcherDigital.get(theInput, "whoops")
     return func()
 
-
-try:
-    while True:
-        #remCode = lirc.nextcode()
-        #print(remCode)
-        for event in IRsignal.read_loop():
-            if event.type == ecodes.EV_KEY:
-                data = categorize(event)
-                print(event.value, hex(event.value), event.code, hex(event.code))
-                remCode = data.keycode #event.value
-                if data.keystate >= 1: # Only on key down event, 2 is held down
-                    if (remCode == btnVolUp):
-                        if (curVol >= volMax):
-                            curVol = curVol
-                        else:
-                            curVol += volStep
-                    if (remCode == btnVolDwn):
-                        if (curVol == 0):
-                            curVol = curVol
-                        else:
-                            curVol -= volStep
-                    print("Current volume is: ", curVol)
-                    dbVol = volTable[curVol]
-                    pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])
-                    # pga2320.close()
-                    if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
-                        if curInput == 6 and remCode == btnSrcUp:
-                            curInput = 0
-                        else:
-                            if remCode == btnSrcUp:
-                                print("SOURCE + was pressed")
-                                curInput += 1
+def listenRemote():
+#    try:
+        while True:
+            #remCode = lirc.nextcode()
+            #print(remCode)
+            global curVol, curInput
+            for event in IRsignal.read_loop():
+                if event.type == ecodes.EV_KEY:
+                    events.put(event)
+                    data = categorize(event)
+                    print(event.value, hex(event.value), event.code, hex(event.code))
+                    remCode = data.keycode #event.value
+                    if data.keystate >= 1: # Only on key down event, 2 is held down
+                        if (remCode == btnVolUp):
+                            if (curVol >= volMax):
+                                curVol = curVol
                             else:
-                                print("SOURCE - was pressed")
-                                if curInput == 0:
-                                    curInput = 6
+                                curVol += volStep
+                        if (remCode == btnVolDwn):
+                            if (curVol == 0):
+                                curVol = curVol
+                            else:
+                                curVol -= volStep
+                        print("Current volume is: ", curVol)
+                        dbVol = volTable[curVol]
+                        pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])
+                        # pga2320.close()
+                        if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
+                            if curInput == 6 and remCode == btnSrcUp:
+                                curInput = 0
+                            else:
+                                if remCode == btnSrcUp:
+                                    print("SOURCE + was pressed")
+                                    curInput += 1
                                 else:
-                                    curInput -= 1
-                    setAnalogInput(curInput)
-                    print("Current Input is: ", curInput)
-                    text = analogInputs[curInput]
-                    print(text)
-finally:
-    pga2320.close()
-    analogInput.close()
-    IRsignal.close()
+                                    print("SOURCE - was pressed")
+                                    if curInput == 0:
+                                        curInput = 6
+                                    else:
+                                        curInput -= 1
+                        setAnalogInput(curInput)
+                        print("Current Input is: ", curInput)
+                        text = analogInputs[curInput]
+                        print(text)
+#    finally:
+#        pga2320.close()
+#        analogInput.close()
+#        IRsignal.close()
+#        print("I just finished cleaning up!")
+
+remoteProcess = threading.Thread(target=listenRemote, daemon=True)
+remoteProcess.start()
+#remoteProcess.join()
+
+while 42:
+    if not events.empty():
+        event = events.get_nowait()
+        print(event)
+#    print('looping')
+    time.sleep(0.1)
+
