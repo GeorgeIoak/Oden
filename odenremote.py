@@ -7,10 +7,11 @@ import os
 import sys
 import spidev
 import smbus
-import config
+##import config
 import threading
 from evdev import InputDevice, categorize, ecodes
-from threading import Thread
+from threading import Thread, Event
+import asyncio
 from queue import Queue
 from time import*
 
@@ -58,11 +59,12 @@ pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 # pga2320.mode = 0b11 # was 3 in CircuitPython, can't change mode for SPI1
 
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
+global events # Testing global to see if it will pass back to oden.py
 try:
     IRsignal = InputDevice('/dev/input/event0')
     events = Queue()
-except (FileNotFoundError, PermissionError):
-    print("Something wrong with IR")
+except (FileNotFoundError, PermissionError)as error:
+    print("Something wrong with IR", error)
 
 
 # Write volume to file
@@ -157,12 +159,16 @@ def setAnalogInput(theInput):
     func = switcherDigital.get(theInput, "whoops")
     return func()
 
+#def listenRemote(curVol, curInput):
+#def listenRemote(stop_event):
 def listenRemote():
-#    try:
-        while True:
+    try:
+#        while True:
             #remCode = lirc.nextcode()
             #print(remCode)
             global curVol, curInput
+##            loop = asyncio.new_event_loop()
+##            asyncio.set_event_loop(loop)
             for event in IRsignal.read_loop():
                 if event.type == ecodes.EV_KEY:
                     events.put(event)
@@ -172,7 +178,7 @@ def listenRemote():
                     if data.keystate >= 1: # Only on key down event, 2 is held down
                         if (remCode == btnVolUp):
                             if (curVol >= volMax):
-                                curVol = curVol
+                                curVol = volMax
                             else:
                                 curVol += volStep
                         if (remCode == btnVolDwn):
@@ -201,19 +207,31 @@ def listenRemote():
                         print("Current Input is: ", curInput)
                         text = analogInputs[curInput]
                         print(text)
+                    print("Made it to the end of listenRemote")
+#                if stop_event.is_set():
+#                    break
+##                    return curVol
+    except Exception as error:
+        print("Had an IR exception", error)
+
 #    finally:
 #        pga2320.close()
 #        analogInput.close()
 #        IRsignal.close()
 #        print("I just finished cleaning up!")
 
-remoteProcess = threading.Thread(target=listenRemote, daemon=True)
-remoteProcess.start()
+#stop_event = Event()
+#stop_event.clear()
+#remoteProcess = threading.Thread(target=listenRemote, daemon=True, args=(stop_event,))
+#remoteProcess.start()
+#stop_event.set()
+
 #remoteProcess.join()
 
-# while 42:
-#     if not events.empty():
-#         event = events.get_nowait()
-#         print(event)
-# #    print('looping')
-#     sleep(0.1)
+#while 42:
+#    if not events.empty():
+#        event = events.get_nowait()
+#        print("OK, now the volume is", curVol)
+#        #print(event)
+##    print('looping')
+#    sleep(0.1)

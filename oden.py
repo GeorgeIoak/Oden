@@ -31,7 +31,7 @@ from PIL import ImageDraw
 from PIL import ImageFont
 from modules.pushbutton import PushButton
 from modules.rotaryencoder import RotaryEncoder
-from modules.odenremote import*
+import modules.odenremote as oden
 import uuid
 import numpy as np
 from ConfigurationFiles.PreConfiguration import*
@@ -120,6 +120,7 @@ STATE_PLAYER = 0
 STATE_QUEUE_MENU = 1
 STATE_LIBRARY_INFO = 2
 STATE_SCREEN_MENU = 3
+STATE_OTHER_INPUT = 4
 
 UPDATE_INTERVAL = 0.034
 
@@ -258,6 +259,7 @@ def sigterm_handler(signal, frame):
     volumioIO.emit('stop')
     GPIO.output(13, GPIO.LOW)
     oled.clear()
+    print("Made it into sigterm_handler")
     show_logo("shutdown.ppm", oled)
 #________________________________________________________________________________________
 #________________________________________________________________________________________
@@ -337,8 +339,8 @@ def display_update_service():
         image.paste("black", [0, 0, image.size[0], image.size[1]])
         try:
             oled.modal.DrawOn(image)
-        except AttributeError:
-            print("render error")
+        except AttributeError as error:
+            print("render error:", error)
             sleep(1) 
         cimg = image.crop((0, 0, oled.WIDTH, oled.HEIGHT)) 
         oled.display(cimg)
@@ -705,6 +707,8 @@ class NowPlayingScreen():
     def __init__(self, height, width):
         self.height = height
         self.width = width
+        self.image = Image.new('RGB', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
         
     def UpdatePlayingInfo(self):
         self.image = Image.new('RGB', (self.width, self.height))
@@ -949,6 +953,8 @@ class OtherInputScreen():
     def __init__(self, height, width):
         self.height = height
         self.width = width
+        self.image = Image.new('RGB', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
 
     def UpdateInputScreen(self):
         self.image = Image.new('RGB', (self.width, self.height))
@@ -956,7 +962,7 @@ class OtherInputScreen():
 
     def DrawOn(self, image):
         self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-        self.draw.text((oledtext03), curInput, font=fontClock, fill='white')
+        self.draw.text((oledtext03), oden.analogInputs[oden.curInput], font=fontClock, fill='white')
         self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
         self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
         self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
@@ -1072,7 +1078,8 @@ def ButtonA_PushEvent(hold_time):
                 volumioIO.emit('play')
         if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration == None:
             volumioIO.emit('stop')
-            oled.modal.UpdateStandbyInfo()  
+#            oled.modal.UpdateStandbyInfo()  
+            oled.modal.UpdateStandbyInfo()
 
 def ButtonB_PushEvent(hold_time):
     if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
@@ -1269,7 +1276,7 @@ def PlaypositionHelper():
 PlayPosHelp = threading.Thread(target=PlaypositionHelper, daemon=True)
 PlayPosHelp.start()
 
-remoteProcess = threading.Thread(target=listenRemote, daemon=True)
+remoteProcess = threading.Thread(target=oden.listenRemote, daemon=True)
 remoteProcess.start()
 #________________________________________________________________________________________
 #________________________________________________________________________________________
@@ -1317,8 +1324,11 @@ while True:
         secvar = 0.0
 
 # This is for the added remote code
-    if not events.empty():
-        event = events.get_nowait()
+    if not oden.events.empty():
+        event = oden.events.get_nowait()
+        SetState(STATE_OTHER_INPUT)
         print("the event is", event)
+        print("End of the loop and curVol is", oden.curVol)
+
 
 sleep(0.02)
