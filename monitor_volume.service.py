@@ -2,9 +2,9 @@
 Description=Volume knob monitor
 
 [Service]
-User=pi
-Group=pi
-ExecStart=/home/pi/bin/monitor-volume
+User=volumio
+Group=volumio
+ExecStart=/home/pi/bin/monitor_volume
 
 [Install]
 WantedBy=multi-user.target

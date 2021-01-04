@@ -2,3 +2,8 @@
 
 dtoverlay=spi1-1cs,cs0_pin=27
 dtoverlay=gpio-ir,gpio_pin=18,gpio_in_pull=up
+# Will show up as  /dev/input/by-path/platform-rotary@17-event -> ../event0
+# 23 = 0x17 which is why you get rotary@17
+dtoverlay=rotary-encoder,pin_a=23,pin_b=22,relative_axis=1,steps-per-period=2
+dtparam=spi=on
+dtparam=i2c=on

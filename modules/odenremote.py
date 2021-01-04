@@ -61,11 +61,14 @@ pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
 global events # Testing global to see if it will pass back to oden.py
 try:
-    IRsignal = InputDevice('/dev/input/event0')
+    IRsignal = InputDevice('/dev/input/by-path/platform-ir-receiver@12-event')
+    Rotarysignal = InputDevice('/dev/input/by-path/platform-rotary@17-event')
     events = Queue()
 except (FileNotFoundError, PermissionError)as error:
-    print("Something wrong with IR", error)
+    print("Something wrong with IR or Rotary Encoder", error)
 
+# RAM Drive setup on /var/ram
+# TODO: need to use RAM Drive until shutting down
 
 # Write volume to file
 def save_vol(vol):
@@ -82,40 +85,7 @@ def get_vol():
     a += 40
     return a
 
-# Set volume function
-def set_volume(volume):
-    gain = 31.5 - (0.5 * (255 - volume))
-    dbgain = str(gain) + "dB"
-    pga2320.open(1, 0)
-    old_vol = get_vol()
-    config.volume = volume
-    save_vol(volume)
-    if config.volume > old_vol:
-        while old_vol < config.volume:
-            old_vol += 1
-
-# Set volume function
-def set_volume(volume):
-    gain = 31.5 - (0.5 * (255 - volume))
-    dbgain = str(gain) + "dB"
-    pga2320.open(1, 0)
-    old_vol = get_vol()
-    config.volume = volume
-    save_vol(volume)
-    if config.volume > old_vol:
-        while old_vol < config.volume:
-            old_vol += 1
-            pga2320.writebytes([old_vol, old_vol])
-            sleep(0.01)
-    elif config.volume < old_vol:
-        while old_vol > config.volume:
-            old_vol -= 1
-            pga2320.writebytes([old_vol, old_vol])
-            sleep(0.01)
-    elif config.volume == old_vol:
-        pga2320.writebytes([old_vol, old_vol])
-    pga2320.close()
-
+# PCF8574 Pin States:
 # BAL 1=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=H 0
 # BAL 2=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=L 1
 # LINE 1                 D0=X,D1=L,D2=L,D3=L,D4=H,D5=L,D6=L,D7=X 2
@@ -126,23 +96,17 @@ def set_volume(volume):
 
 def bal1(): #0xC1 / 0b1100 0001
     analogInput.write_byte(pcf_address, 0b11000001)
-
-def bal2(): #0x41 0b0100 0001
+def bal2(): #0x41 / 0b0100 0001
     analogInput.write_byte(pcf_address, 0b01000001)
-
-def line1(): #0x11 0b0001 0001
+def line1(): #0x11 / 0b0001 0001
     analogInput.write_byte(pcf_address, 0b00010001)
-
-def line2(): #0x09 0b0000 1001
+def line2(): #0x09 / 0b0000 1001
     analogInput.write_byte(pcf_address, 0b00001001)
-
-def line3(): #0x05 0b0000 0101
+def line3(): #0x05 / 0b0000 0101
     analogInput.write_byte(pcf_address, 0b00000101)
-
-def line4(): #0x03 0b0000 0011
+def line4(): #0x03 / 0b0000 0011
     analogInput.write_byte(pcf_address, 0b00000011)
-
-def line5(): #0x21 0b0010 0001
+def line5(): #0x21 / 0b0010 0001
     analogInput.write_byte(pcf_address, 0b00100001)
 
 switcherDigital = { 
@@ -159,21 +123,21 @@ def setAnalogInput(theInput):
     func = switcherDigital.get(theInput, "whoops")
     return func()
 
-#def listenRemote(curVol, curInput):
+#def listenRemote(curVol, curInput):  # Rotary Encoder could have changed variables so pass them in
 #def listenRemote(stop_event):
 def listenRemote():
     try:
 #        while True:
             #remCode = lirc.nextcode()
             #print(remCode)
-            global curVol, curInput
+            global curVol, curInput  # Needs to be global so values can be passed back to oden.py
 ##            loop = asyncio.new_event_loop()
 ##            asyncio.set_event_loop(loop)
             for event in IRsignal.read_loop():
                 if event.type == ecodes.EV_KEY:
                     events.put(event)
                     data = categorize(event)
-                    print(event.value, hex(event.value), event.code, hex(event.code))
+                    #print(event.value, hex(event.value), event.code, hex(event.code))
                     remCode = data.keycode #event.value
                     if data.keystate >= 1: # Only on key down event, 2 is held down
                         if (remCode == btnVolUp):
@@ -182,14 +146,13 @@ def listenRemote():
                             else:
                                 curVol += volStep
                         if (remCode == btnVolDwn):
-                            if (curVol == 0):
-                                curVol = curVol
+                            if (curVol <= 0):
+                                curVol = 0
                             else:
                                 curVol -= volStep
                         print("Current volume is: ", curVol)
                         dbVol = volTable[curVol]
-                        pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])
-                        # pga2320.close()
+                        pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                         if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
                             if curInput == 6 and remCode == btnSrcUp:
                                 curInput = 0
@@ -204,10 +167,19 @@ def listenRemote():
                                     else:
                                         curInput -= 1
                         setAnalogInput(curInput)
-                        print("Current Input is: ", curInput)
                         text = analogInputs[curInput]
-                        print(text)
-                    print("Made it to the end of listenRemote")
+                        print("Current Input is: ", text)
+            for revent in Rotarysignal.read_loop():
+                if revent.type == ecodes.EV_Rel:
+                    events.put(revent)
+                    curVol += revent.value
+                    if curVol < 0:
+                        curVol = 0
+                    elif curVol > volMax:
+                        curVol = volMax
+                    dbVol = volTable[curVol]
+                    pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
+                    print("Rotary changed the volume to", curVol)
 #                if stop_event.is_set():
 #                    break
 ##                    return curVol

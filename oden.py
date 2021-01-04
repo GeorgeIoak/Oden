@@ -1143,6 +1143,7 @@ def ButtonD_PushEvent(hold_time):
 def RightKnob_RotaryEvent(dir):
     global emit_track
     oled.stateTimeout = 6.0
+    print("Inside RightKnob_RotaryEvent", dir)
     if oled.state == STATE_PLAYER:
         SetState(STATE_QUEUE_MENU)
     elif oled.state == STATE_QUEUE_MENU and dir == RotaryEncoder.LEFT:
@@ -1159,6 +1160,21 @@ def RightKnob_RotaryEvent(dir):
     elif oled.state == STATE_SCREEN_MENU and dir == RotaryEncoder.RIGHT:
         oled.modal.NextOption()
         oled.SelectedScreen = oled.modal.SelectedOption()
+    # For now keep the current volume state inside odenremote.py
+    elif oled.state == STATE_OTHER_INPUT:
+        if dir == RotaryEncoder.LEFT:
+            if (oden.curVol >= oden.volMax):
+                oden.curVol = oden.volMax
+            else:
+                oden.curVol += oden.volStep
+        else:
+            if (oden.curVol <= 0):
+                oden.curVol = 0
+            else:
+                oden.curVol -= oden.volStep
+        print("Current volume is (from oden.py): ", oden.curVol)
+        dbVol = oden.volTable[oden.curVol]
+        oden.pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
 
 def RightKnob_PushEvent(hold_time):
     if hold_time < 1:
@@ -1194,10 +1210,11 @@ ButtonC_Push.setCallback(ButtonC_PushEvent)
 ButtonD_Push = PushButton(oledBtnD, max_time=2)
 ButtonD_Push.setCallback(ButtonD_PushEvent)
 
-RightKnob_Push = PushButton(oledRtrBtn, max_time=2)
-RightKnob_Push.setCallback(RightKnob_PushEvent)
-RightKnob_Rotation = RotaryEncoder(oledRtrLeft, oledRtrRight, pulses_per_cycle=4)
-RightKnob_Rotation.setCallback(RightKnob_RotaryEvent)
+# Using overlay and events
+#RightKnob_Push = PushButton(oledRtrBtn, max_time=2)
+#RightKnob_Push.setCallback(RightKnob_PushEvent)
+#RightKnob_Rotation = RotaryEncoder(oledRtrLeft, oledRtrRight, pulses_per_cycle=4)
+#RightKnob_Rotation.setCallback(RightKnob_RotaryEvent)
 #________________________________________________________________________________________
 #________________________________________________________________________________________
 #    
@@ -1326,9 +1343,11 @@ while True:
 # This is for the added remote code
     if not oden.events.empty():
         event = oden.events.get_nowait()
-        SetState(STATE_OTHER_INPUT)
+        if oden.curInput == 1:
+            SetState(STATE_PLAYER)
+        else:
+            SetState(STATE_OTHER_INPUT)
         print("the event is", event)
         print("End of the loop and curVol is", oden.curVol)
-
 
 sleep(0.02)
