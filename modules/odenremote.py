@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 #coding: utf8
+# TODO Change this to a class (?) 
 
 #import lirc
 #import time
@@ -45,21 +46,25 @@ old_vol = dbVol = 0
 volStep = 1
 volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 lookup table
 
-i2c_port_num = 1
-pcf_address = 0x38  #temp address from 0x3B PCF8574A: A0=H, A1=H, A2=L
-analogInput = smbus.SMBus(1)
-analogInput.write_byte(pcf_address, 0x00) # Set PCF8574A to all outputs
+try:
+    i2c_port_num = 1
+    pcf_address = 0x38  #temp address from 0x3B PCF8574A: A0=H, A1=H, A2=L
+    analogInput = smbus.SMBus(1)
+    analogInput.write_byte(pcf_address, 0x00) # Set PCF8574A to all outputs
+except:
+    print("Could not connect to the PCF8574")
 
 
 # Open SPI bus instance for PGA2320
-SPI_PORT = 1
-SPI_DEVICE = 0
-pga2320 = spidev.SpiDev()
-pga2320.open(SPI_PORT, SPI_DEVICE)
-pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
-# pga2320.mode = 0b11 # was 3 in CircuitPython, can't change mode for SPI1
+try:
+    SPI_PORT = 1
+    SPI_DEVICE = 0
+    pga2320 = spidev.SpiDev()
+    pga2320.open(SPI_PORT, SPI_DEVICE)
+    pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
+except:
+    print("Could not connect to SPI1 bus")
 
-# sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
 global events # Testing global to see if it will pass back to oden.py
 selector = selectors.DefaultSelector()
 try:
@@ -128,39 +133,30 @@ def setAnalogInput(theInput):
     func = switcherDigital.get(theInput, "whoops")
     return func()
 
-#def listenRemote(curVol, curInput):  # Rotary Encoder could have changed variables so pass them in
-#def listenRemote(stop_event):
 def listenRemote():
     try:
         while True:
-            #remCode = lirc.nextcode()
-            #print(remCode)
             global curVol, curInput  # Needs to be global so values can be passed back to oden.py
-##            loop = asyncio.new_event_loop()
-##            asyncio.set_event_loop(loop)
-            # for event in IRsignal.read_loop():
             for key, mask in selector.select():
                 device = key.fileobj
                 for event in device.read():
                     if event.type == ecodes.EV_KEY:
                         events.put(event)
                         data = categorize(event)
-                        #print(event.value, hex(event.value), event.code, hex(event.code))
                         remCode = data.keycode #event.value
                         if data.keystate >= 1: # Only on key down event, 2 is held down
-                            if (remCode == btnVolUp):
-                                if (curVol >= volMax):
+                            if (remCode == btnVolUp) or (remCode == btnVolDwn):
+                                if (curVol >= volMax) and (remCode == btnVolUp):
                                     curVol = volMax
-                                else:
+                                elif (remCode == btnVolUp):
                                     curVol += volStep
-                            if (remCode == btnVolDwn):
-                                if (curVol <= 0):
+                                if (remCode == btnVolDwn) and (curVol <= 0):
                                     curVol = 0
-                                else:
-                                    curVol -= volStep
-                            print("Current volume is: ", curVol)
-                            dbVol = volTable[curVol]
-                            pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
+                                elif (curVol <= 0):
+                                        curVol -= volStep
+                                print("Current volume is: ", curVol)
+                                dbVol = volTable[curVol]
+                                pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                             if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
                                 if curInput == 6 and remCode == btnSrcUp:
                                     curInput = 0
@@ -174,10 +170,9 @@ def listenRemote():
                                             curInput = 6
                                         else:
                                             curInput -= 1
-                            setAnalogInput(curInput)
-                            text = analogInputs[curInput]
-                            print("Current Input is: ", text)
-            # for event in Rotarysignal.read_loop(): #This didn't work, stuck in upper read_loop
+                                setAnalogInput(curInput)
+                                text = analogInputs[curInput]
+                                print("Current Input is: ", text)
                     if event.type == ecodes.EV_REL:
                         events.put(event)
                         curVol += event.value
@@ -188,9 +183,6 @@ def listenRemote():
                         dbVol = volTable[curVol]
                         pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                         print("Rotary changed the volume to", curVol)
-    #                if stop_event.is_set():
-    #                    break
-    ##                    return curVol
     except Exception as error:
         print("Had an IR exception", error)
 
@@ -199,19 +191,3 @@ def listenRemote():
 #        analogInput.close()
 #        IRsignal.close()
 #        print("I just finished cleaning up!")
-
-#stop_event = Event()
-#stop_event.clear()
-#remoteProcess = threading.Thread(target=listenRemote, daemon=True, args=(stop_event,))
-#remoteProcess.start()
-#stop_event.set()
-
-#remoteProcess.join()
-
-#while 42:
-#    if not events.empty():
-#        event = events.get_nowait()
-#        print("OK, now the volume is", curVol)
-#        #print(event)
-##    print('looping')
-#    sleep(0.1)

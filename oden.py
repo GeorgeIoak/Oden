@@ -715,7 +715,6 @@ class NowPlayingScreen():
         self.draw = ImageDraw.Draw(self.image)
         
     def UpdatePlayingInfo(self):
-        print("Running UpdatePlayingInfo")
         self.image = Image.new('RGB', (self.width, self.height))
         self.draw = ImageDraw.Draw(self.image)
         
@@ -826,7 +825,8 @@ class NowPlayingScreen():
                     self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
                 # TODO Change volume to display PGA2320 Volume Level (oden.curVol)
                 if oled.volume >= 0:
-                    self.volume = 'Vol.: ' + str(oled.volume) + '%'
+                    #self.volume = 'Vol.: ' + str(oled.volume) + '%'
+                    self.volume = 'Vol.: ' + str(oden.curVol) + '%'
                     self.draw.text((Screen4text29), self.volume, font=font4, fill='white')
                 #self.draw.text((Screen4ActualPlaytimeText), str(timedelta(seconds=round(float(oled.seek) / 1000))), font=font4, fill='white')
                 self.draw.text((Screen4ActualPlaytimeText), str(int(oled.seek / 1000)), font=font4, fill='white')
@@ -1284,7 +1284,7 @@ while True:
                 oled.modal.UpdatePlayingInfo()
             else: # TODO Only need to change state once
                 SetState(STATE_OTHER_INPUT)
-            print("the event is", event)
+            #print("the event is", event)
             print("End of the loop and curVol is", oden.curVol)
             selectedInput = oden.curInput
 
