@@ -52,3 +52,9 @@ sudo mount -osize=1M -t tmpfs tmpfs /mnt/ramdisk
 # Make Ram Disk Automatic on Boot
 sudo nano /etc/fstab
 tmpfs /mnt/ramdisk tmpfs defaults,noatime,mode=755,uid=volumio,gid=volumio,size=1M 0 0
+
+2021/01/04
+Preparing to install selectors module so I can check 2 event sources at the "same time"
+
+sudo apt-get build-dep python3-lxml
+pip38 install selectors

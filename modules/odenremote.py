@@ -10,6 +10,7 @@ import smbus
 ##import config
 import threading
 from evdev import InputDevice, categorize, ecodes
+import selectors
 from threading import Thread, Event
 import asyncio
 from queue import Queue
@@ -60,9 +61,13 @@ pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
 
 # sockid = lirc.init("odenremote") # Changed to using ir-keytable and events
 global events # Testing global to see if it will pass back to oden.py
+selector = selectors.DefaultSelector()
 try:
     IRsignal = InputDevice('/dev/input/by-path/platform-ir-receiver@12-event')
     Rotarysignal = InputDevice('/dev/input/by-path/platform-rotary@17-event')
+    # This works because InputDevice has a `fileno()` method.
+    selector.register(IRsignal, selectors.EVENT_READ)
+    selector.register(Rotarysignal, selectors.EVENT_READ)
     events = Queue()
 except (FileNotFoundError, PermissionError)as error:
     print("Something wrong with IR or Rotary Encoder", error)
@@ -127,62 +132,65 @@ def setAnalogInput(theInput):
 #def listenRemote(stop_event):
 def listenRemote():
     try:
-#        while True:
+        while True:
             #remCode = lirc.nextcode()
             #print(remCode)
             global curVol, curInput  # Needs to be global so values can be passed back to oden.py
 ##            loop = asyncio.new_event_loop()
 ##            asyncio.set_event_loop(loop)
-            for event in IRsignal.read_loop():
-                if event.type == ecodes.EV_KEY:
-                    events.put(event)
-                    data = categorize(event)
-                    #print(event.value, hex(event.value), event.code, hex(event.code))
-                    remCode = data.keycode #event.value
-                    if data.keystate >= 1: # Only on key down event, 2 is held down
-                        if (remCode == btnVolUp):
-                            if (curVol >= volMax):
-                                curVol = volMax
-                            else:
-                                curVol += volStep
-                        if (remCode == btnVolDwn):
-                            if (curVol <= 0):
-                                curVol = 0
-                            else:
-                                curVol -= volStep
-                        print("Current volume is: ", curVol)
+            # for event in IRsignal.read_loop():
+            for key, mask in selector.select():
+                device = key.fileobj
+                for event in device.read():
+                    if event.type == ecodes.EV_KEY:
+                        events.put(event)
+                        data = categorize(event)
+                        #print(event.value, hex(event.value), event.code, hex(event.code))
+                        remCode = data.keycode #event.value
+                        if data.keystate >= 1: # Only on key down event, 2 is held down
+                            if (remCode == btnVolUp):
+                                if (curVol >= volMax):
+                                    curVol = volMax
+                                else:
+                                    curVol += volStep
+                            if (remCode == btnVolDwn):
+                                if (curVol <= 0):
+                                    curVol = 0
+                                else:
+                                    curVol -= volStep
+                            print("Current volume is: ", curVol)
+                            dbVol = volTable[curVol]
+                            pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
+                            if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
+                                if curInput == 6 and remCode == btnSrcUp:
+                                    curInput = 0
+                                else:
+                                    if remCode == btnSrcUp:
+                                        print("SOURCE + was pressed")
+                                        curInput += 1
+                                    else:
+                                        print("SOURCE - was pressed")
+                                        if curInput == 0:
+                                            curInput = 6
+                                        else:
+                                            curInput -= 1
+                            setAnalogInput(curInput)
+                            text = analogInputs[curInput]
+                            print("Current Input is: ", text)
+            # for event in Rotarysignal.read_loop(): #This didn't work, stuck in upper read_loop
+                    if event.type == ecodes.EV_REL:
+                        events.put(event)
+                        curVol += event.value
+                        if curVol < 0:
+                            curVol = 0
+                        elif curVol > volMax:
+                            curVol = volMax
                         dbVol = volTable[curVol]
                         pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
-                        if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
-                            if curInput == 6 and remCode == btnSrcUp:
-                                curInput = 0
-                            else:
-                                if remCode == btnSrcUp:
-                                    print("SOURCE + was pressed")
-                                    curInput += 1
-                                else:
-                                    print("SOURCE - was pressed")
-                                    if curInput == 0:
-                                        curInput = 6
-                                    else:
-                                        curInput -= 1
-                        setAnalogInput(curInput)
-                        text = analogInputs[curInput]
-                        print("Current Input is: ", text)
-            for revent in Rotarysignal.read_loop():
-                if revent.type == ecodes.EV_Rel:
-                    events.put(revent)
-                    curVol += revent.value
-                    if curVol < 0:
-                        curVol = 0
-                    elif curVol > volMax:
-                        curVol = volMax
-                    dbVol = volTable[curVol]
-                    pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
-                    print("Rotary changed the volume to", curVol)
-#                if stop_event.is_set():
-#                    break
-##                    return curVol
+                        print("Rotary changed the volume to", curVol)
+    #                if stop_event.is_set():
+    #                    break
+    ##                    return curVol
     except Exception as error:
         print("Had an IR exception", error)
 

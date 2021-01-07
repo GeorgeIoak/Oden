@@ -186,13 +186,14 @@ oled.bitrate = ''
 oled.repeatonce = False
 oled.shuffle = False
 oled.mute = False
+oled.dimLevel = 128 #use oled.contrast(level) range of 0-255
 
 # Declare files to save status varialbe
 file_mute = mute
 file_vol = vol
 file_input = theinput
 file_power = power
-
+selectedInput = 0
 
 image = Image.new('RGB', (oled.WIDTH, oled.HEIGHT))  #for Pixelshift: (oled.WIDTH + 4, oled.HEIGHT + 4)) 
 oled.clear()
@@ -336,6 +337,7 @@ def display_update_service():
             oled.timeOutRunning = False
             oled.stateTimeout = 0
             SetState(STATE_PLAYER)
+            print("Inside display_update for some reason")
         image.paste("black", [0, 0, image.size[0], image.size[1]])
         try:
             oled.modal.DrawOn(image)
@@ -440,13 +442,14 @@ def onPushState(data):
         global ScrollArtistTag
         global ScrollArtistNext
         global ScrollArtistFirstRound
-        global ScrollArtistNextRound                  
+        global ScrollArtistNextRound
         global ScrollSongTag
         global ScrollSongNext
         global ScrollSongFirstRound
         global ScrollSongNextRound
         OPDsave = data
-        #print('data: ', str(data).encode('utf-8'))    
+        #print('status:', data['status'].encode('utf-8'))
+        #print('position:', int(data['seek'] / 1000))
     
         if 'title' in data:
             newSong = data['title']
@@ -704,6 +707,7 @@ def onPushQueue(data):
 #            /_/            /____/                                             
 #
 class NowPlayingScreen():
+    print("Inside NowPlayingScreen")
     def __init__(self, height, width):
         self.height = height
         self.width = width
@@ -711,6 +715,7 @@ class NowPlayingScreen():
         self.draw = ImageDraw.Draw(self.image)
         
     def UpdatePlayingInfo(self):
+        print("Running UpdatePlayingInfo")
         self.image = Image.new('RGB', (self.width, self.height))
         self.draw = ImageDraw.Draw(self.image)
         
@@ -738,7 +743,7 @@ class NowPlayingScreen():
 
         if NowPlayingLayout == 'No-Spectrum' and newStatus != 'stop' and DisplayTechnology == 'spi1322':
 
-            if newStatus != 'stop' and oled.duration != None:
+            if newStatus != 'stop':
                 self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
                 self.ArtistWidth, self.ArtistHeight = self.draw.textsize(oled.activeArtist, font=font)
                 self.ArtistStopPosition = self.ArtistWidth - self.width + ArtistEndScrollMargin
@@ -797,12 +802,16 @@ class NowPlayingScreen():
                             ScrollSongTag = 0
                             self.SongPosition = (Screen4text02)
                 if self.SongWidth <= self.width:                  # center text
-                    self.SongPosition = (int((self.width-self.SongWidth)/2), Screen4text02[1])  
+                    self.SongPosition = (int((self.width-self.SongWidth)/2), Screen4text02[1])
                 self.draw.text((self.SongPosition), oled.activeSong, font=font3, fill='white')
                 self.draw.text((Screen4text28), oled.playstateIcon, font=labelfont, fill='white')
-                self.draw.text((Screen4text06), oled.activeFormat, font=font4, fill='white')
-                self.draw.text((Screen4text07), str(oled.activeSamplerate), font=font4, fill='white')
-                self.draw.text((Screen4text08), oled.activeBitdepth, font=font4, fill='white')
+                if oled.duration != None:
+                    self.draw.text((Screen4text06), oled.activeFormat, font=font4, fill='white')
+                    self.draw.text((Screen4text07), str(oled.activeSamplerate), font=font4, fill='white')
+                    self.draw.text((Screen4text08), oled.activeBitdepth, font=font4, fill='white')
+                else:
+                    self.draw.text((Screen4Text0008), oled.activeFormat, font=font4, fill='white')
+                    self.draw.text((Screen4text008), oled.bitrate, font=font4, fill='white')
                 if oled.repeat == True:
                     if oled.repeatonce == False:
                         self.draw.text((Screen4text33), oledrepeat, font=labelfont, fill='white')
@@ -815,97 +824,18 @@ class NowPlayingScreen():
                     self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
                 else:
                     self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
+                # TODO Change volume to display PGA2320 Volume Level (oden.curVol)
                 if oled.volume >= 0:
                     self.volume = 'Vol.: ' + str(oled.volume) + '%'
                     self.draw.text((Screen4text29), self.volume, font=font4, fill='white')
-                self.draw.text((Screen4ActualPlaytimeText), str(timedelta(seconds=round(float(oled.seek) / 1000))), font=font4, fill='white')
+                #self.draw.text((Screen4ActualPlaytimeText), str(timedelta(seconds=round(float(oled.seek) / 1000))), font=font4, fill='white')
+                self.draw.text((Screen4ActualPlaytimeText), str(int(oled.seek / 1000)), font=font4, fill='white')
                 if oled.duration != None:
                     self.playbackPoint = oled.seek / oled.duration / 10
                     self.bar = Screen2barwidth * self.playbackPoint / 100
                     self.draw.text((Screen4DurationText), str(timedelta(seconds=oled.duration)), font=font4, fill='white')
                     self.draw.rectangle((Screen4barLineX , Screen4barLineThick1, Screen4barLineX+Screen4barwidth, Screen4barLineThick2), outline=Screen4barLineBorder, fill=Screen4barLineFill)
                     self.draw.rectangle((self.bar+Screen4barLineX-Screen4barNibbleWidth, Screen4barThick1, Screen4barX+self.bar+Screen4barNibbleWidth, Screen4barThick2), outline=Screen4barBorder, fill=Screen4barFill)
-                image.paste(self.image, (0, 0))
-
-            if newStatus != 'stop' and oled.duration == None:
-                self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-                self.ArtistWidth, self.ArtistHeight = self.draw.textsize(oled.activeArtist, font=font)
-                self.ArtistStopPosition = self.ArtistWidth - self.width + ArtistEndScrollMargin
-                if self.ArtistWidth >= self.width:
-                    if ScrollArtistFirstRound == True:
-                        ScrollArtistFirstRound = False
-                        ScrollArtistTag = 0
-                        self.ArtistPosition = (Screen4text01)
-                    elif ScrollArtistFirstRound == False and ScrollArtistNextRound == False:
-                        if ScrollArtistTag <= self.ArtistWidth - 1:
-                            ScrollArtistTag += ArtistScrollSpeed
-                            self.ArtistPosition = (-ScrollArtistTag ,Screen4text01[1])
-                            ScrollArtistNext = 0
-                        elif ScrollArtistTag == self.ArtistWidth:
-                            ScrollArtistTag = 0
-                            ScrollArtistNextRound = True
-                            ScrollArtistNext = self.width + ArtistEndScrollMargin
-                    if ScrollArtistNextRound == True:        
-                        if ScrollArtistNext >= 0:                    
-                            self.ArtistPosition = (ScrollArtistNext ,Screen4text01[1])
-                            ScrollArtistNext -= ArtistScrollSpeed
-                        elif ScrollArtistNext == -ArtistScrollSpeed and ScrollArtistNextRound == True:
-                            ScrollArtistNext = 0
-                            ScrollArtistNextRound = False
-                            ScrollArtistFirstRound = False
-                            ScrollArtistTag = 0
-                            self.ArtistPosition = (Screen4text01)
-                if self.ArtistWidth <= self.width:                  # center text
-                    self.ArtistPosition = (int((self.width-self.ArtistWidth)/2), Screen4text01[1])  
-                self.draw.text((self.ArtistPosition), oled.activeArtist, font=font, fill='white')
-
-                self.SongWidth, self.SongHeight = self.draw.textsize(oled.activeSong, font=font3)
-                self.SongStopPosition = self.SongWidth - self.width + SongEndScrollMargin
-                if self.SongWidth >= self.width:
-                    if ScrollSongFirstRound == True:
-                        ScrollSongFirstRound = False
-                        ScrollSongTag = 0
-                        self.SongPosition = (Screen4text02)
-                    elif ScrollSongFirstRound == False and ScrollSongNextRound == False:
-                        if ScrollSongTag <= self.SongWidth - 1:
-                            ScrollSongTag += SongScrollSpeed
-                            self.SongPosition = (-ScrollSongTag ,Screen4text02[1])
-                            ScrollSongNext = 0
-                        elif ScrollSongTag == self.SongWidth:
-                            ScrollSongTag = 0
-                            ScrollSongNextRound = True
-                            ScrollSongNext = self.width + SongEndScrollMargin
-                    if ScrollSongNextRound == True:        
-                        if ScrollSongNext >= 0:                    
-                            self.SongPosition = (ScrollSongNext ,Screen4text02[1])
-                            ScrollSongNext -= SongScrollSpeed
-                        elif ScrollSongNext == -SongScrollSpeed and ScrollSongNextRound == True:
-                            ScrollSongNext = 0
-                            ScrollSongNextRound = False
-                            ScrollSongFirstRound = False
-                            ScrollSongTag = 0
-                            self.SongPosition = (Screen4text02)
-                if self.SongWidth <= self.width:                  # center text
-                    self.SongPosition = (int((self.width-self.SongWidth)/2), Screen4text02[1])  
-                self.draw.text((self.SongPosition), oled.activeSong, font=font3, fill='white')
-                self.draw.text((Screen4text28), oled.playstateIcon, font=labelfont, fill='white')
-                self.draw.text((Screen4Text0008), oled.activeFormat, font=font4, fill='white')
-                self.draw.text((Screen4text008), oled.bitrate, font=font4, fill='white')
-                if oled.repeat == True:
-                    if oled.repeatonce == False:
-                        self.draw.text((Screen4text33), oledrepeat, font=labelfont, fill='white')
-                    if oled.repeatonce == True:
-                        self.draw.text((Screen4text33), oledrepeat, font=labelfont, fill='white')
-                        self.draw.text((Screen4text34), str(1), font=font4, fill='white')
-                if oled.shuffle == True:
-                    self.draw.text((Screen4text35), oledshuffle, font=labelfont, fill='white')
-                if oled.mute == False:
-                    self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
-                else:
-                    self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
-                if oled.volume >= 0:
-                    self.volume = 'Vol.: ' + str(oled.volume) + '%'
-                    self.draw.text((Screen4text29), self.volume, font=font4, fill='white')
                 image.paste(self.image, (0, 0))
 #_____________________________________________________________________________________________________________
 #   _____ __                  ____               _____                         
@@ -1112,8 +1042,11 @@ def ButtonC_PushEvent(hold_time):
             repeatTag = False
        
 def ButtonD_PushEvent(hold_time):
+    # TODO Change to a few set dime levels
+    oled.dimLevel -= oled.dimLevel
+    oled.contrast(oled.dimLevel)
     if hold_time < 2:
-        print('ButtonD short press event')
+        print('ButtonD short press event', oled.dimLevel)
         if oled.state == STATE_PLAYER and oled.playState != 'stop':
             volumioIO.emit('next')
         if oled.state == STATE_PLAYER and oled.playState == 'stop':
@@ -1264,8 +1197,8 @@ volumioIO.on('pushQueue', onPushQueue)
 
 # get list of Playlists and initial state
 volumioIO.emit('listPlaylist')
-volumioIO.emit('getState')
-volumioIO.emit('getQueue')
+volumioIO.emit('getState', '', onPushState)
+volumioIO.emit('getQueue', '', onPushQueue)
 
 sleep(0.1)
 
@@ -1285,10 +1218,10 @@ GetIP()
 
 def PlaypositionHelper():
     while True:
-        volumioIO.emit('getState')
-    now = datetime.now()
-    oled.date = now.strftime("%d.%m.%Y")
-    sleep(1.0)
+        volumioIO.emit('getState', '', onPushState)
+        now = datetime.now()
+        oled.date = now.strftime("%d.%m.%Y")
+        sleep(1.0)
 
 PlayPosHelp = threading.Thread(target=PlaypositionHelper, daemon=True)
 PlayPosHelp.start()
@@ -1343,11 +1276,16 @@ while True:
 # This is for the added remote code
     if not oden.events.empty():
         event = oden.events.get_nowait()
-        if oden.curInput == 1:
-            SetState(STATE_PLAYER)
-        else:
-            SetState(STATE_OTHER_INPUT)
-        print("the event is", event)
-        print("End of the loop and curVol is", oden.curVol)
+        if oden.curInput != selectedInput:
+            if oden.curInput == 1:
+                volumioIO.emit('getState', '', onPushState)
+                SetState(STATE_PLAYER)
+                print("curInput = 1", oled.state, newStatus)
+                oled.modal.UpdatePlayingInfo()
+            else: # TODO Only need to change state once
+                SetState(STATE_OTHER_INPUT)
+            print("the event is", event)
+            print("End of the loop and curVol is", oden.curVol)
+            selectedInput = oden.curInput
 
 sleep(0.02)
