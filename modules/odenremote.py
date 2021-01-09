@@ -140,6 +140,7 @@ def listenRemote():
             for key, mask in selector.select():
                 device = key.fileobj
                 for event in device.read():
+                    print("got an event")
                     if event.type == ecodes.EV_KEY:
                         events.put(event)
                         data = categorize(event)

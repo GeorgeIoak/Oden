@@ -186,7 +186,7 @@ oled.bitrate = ''
 oled.repeatonce = False
 oled.shuffle = False
 oled.mute = False
-oled.dimLevel = 128 #use oled.contrast(level) range of 0-255
+oled.dimLevel = 1
 
 # Declare files to save status varialbe
 file_mute = mute
@@ -194,6 +194,7 @@ file_vol = vol
 file_input = theinput
 file_power = power
 selectedInput = 0
+dimLevels = [0, 75, 150, 255]  #use oled.contrast(level) range of 0-255
 
 image = Image.new('RGB', (oled.WIDTH, oled.HEIGHT))  #for Pixelshift: (oled.WIDTH + 4, oled.HEIGHT + 4)) 
 oled.clear()
@@ -1012,66 +1013,26 @@ def ButtonA_PushEvent(hold_time):
             oled.modal.UpdateStandbyInfo()
 
 def ButtonB_PushEvent(hold_time):
-    if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
+    if hold_time < 2:
         print('ButtonB short press event')
-        if oled.state == STATE_PLAYER and oled.playState != 'stop':
-            volumioIO.emit('stop')
-            oled.modal.UpdateStandbyInfo()  
+        oden.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 1)
+        oden.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
+        oden.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 0)
+        oden.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
 def ButtonC_PushEvent(hold_time):
     if hold_time < 2:
-        print('ButtonC short press event')
-        #date_string = str(uuid.uuid1())
-        #print(date_string)
-        #image.save('/home/volumio/'+date_string+'.png')
-        if oled.state == STATE_PLAYER and oled.playState != 'stop':
-            volumioIO.emit('prev')
-        if oled.state == STATE_PLAYER and oled.playState == 'stop':
-            print ('RightKnob_PushEvent SHORT')
-            SetState(STATE_SCREEN_MENU)
-            oled.state = 3
-            oled.modal = ScreenSelectMenu(oled.HEIGHT, oled.WIDTH)
-            sleep(0.2)
-    elif oled.state == STATE_PLAYER and oled.playState != 'stop':
-        print('ButtonC long press event')
-        if repeatTag == False:
-            volumioIO.emit('setRepeat', {"value":"true"})
-            repeatTag = True            
-        elif repeatTag == True:
-            volumioIO.emit('setRepeat', {"value":"false"})
-            repeatTag = False
-       
+        oden.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 1)
+        oden.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
+        oden.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 0)
+        oden.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
+
 def ButtonD_PushEvent(hold_time):
-    # TODO Change to a few set dime levels
-    oled.dimLevel -= oled.dimLevel
-    oled.contrast(oled.dimLevel)
-    if hold_time < 2:
-        print('ButtonD short press event', oled.dimLevel)
-        if oled.state == STATE_PLAYER and oled.playState != 'stop':
-            volumioIO.emit('next')
-        if oled.state == STATE_PLAYER and oled.playState == 'stop':
-            b_obj = BytesIO()
-            crl = pycurl.Curl()
-            crl.setopt(crl.URL, 'localhost:3000/api/v1/collectionstats')
-            crl.setopt(crl.WRITEDATA, b_obj)
-            crl.perform()
-            crl.close()
-            get_body = b_obj.getvalue()
-            print('getBody',get_body)
-            SetState(STATE_LIBRARY_INFO)
-            oled.playState = 'info'
-            onPushCollectionStats(get_body)
-            sleep(0.5) 
-        elif oled.state == STATE_LIBRARY_INFO:
-            SetState(STATE_PLAYER)
-    elif oled.state == STATE_PLAYER and oled.playState != 'stop':
-        print('ButtonD long press event')
-        if randomTag == False:
-            volumioIO.emit('setRandom', {"value":"true"})
-            randomTag = True
-        elif randomTag == True:
-            volumioIO.emit('setRandom', {"value":"false"})
-            randomTag = False
+    if oled.dimLevel == 3:
+        oled.dimLevel = 0
+    oled.dimLevel += 1
+    oled.contrast(dimLevels[oled.dimLevel])
+    print('ButtonD short press event', oled.dimLevel)
 
 def RightKnob_RotaryEvent(dir):
     global emit_track
