@@ -4,7 +4,7 @@ Description=Bladelius Oden Control
 [Service]
 Type=simple
 WorkingDirectory=/home/volumio
-ExecStart=/home/volumio/src/Python-3.9.1/bin/python3.9 -u /home/volumio/Oden/oden.py
+ExecStart=/home/volumio/src/Python-3.8.5/bin/python3.8 -u /home/volumio/Oden/oden.py
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=oden
