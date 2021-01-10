@@ -4,9 +4,9 @@ echo -e "\e[92mSeting up...\e[0m" #
 echo "" #
 echo "_________________________________________________________ " #
 sudo dpkg-reconfigure tzdata #
-sudo apt-get update #
+sudo apt update #
 
-sudo apt-get install -y build-essential libffi-dev libc6-dev libbz2-dev libexpat1-dev liblzma-dev \
+sudo apt install -y build-essential libffi-dev libc6-dev libbz2-dev libexpat1-dev liblzma-dev \
 zlib1g-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev \
 libsqlite3-dev libssl-dev tk-dev ir-keytable build-dep python3-lxml #
 
@@ -37,14 +37,16 @@ export LD_LIBRARY_PATh=/home/volumio/src/Python-3.8.5/bin #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U pip #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U setuptools #
 
-sudo apt-get install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev \
+sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev \
 python-rpi.gpio libcurl4-openssl-dev libssl-dev git-core autoconf make libtool libfftw3-dev \
 libasound2-dev libncursesw5-dev libpulse-dev libtool #
+
+sudo apt build-dep python3-lxml # Needed for selectors
 
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade setuptools pip wheel #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade luma.oled #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install \
-psutil socketIO-client pycurl gpiozero readchar numpy requests evdev config selectors #
+psutil socketIO-client pycurl gpiozero readchar numpy requests smbus evdev config selectors #
 echo -e "\e[92mAll Python related modules are installed...\e[0m" #
 cd #
 
