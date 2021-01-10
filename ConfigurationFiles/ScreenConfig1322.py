@@ -2,7 +2,7 @@
 
 #___________________________________________________________________
 #config for boot- and shutdown-logo
-oledBootLogo = "StartScreen1322.bmp"
+oledBootLogo = "StartScreen1322_Bladelius.bmp"
 oledShutdownLogo = "ShutdownScreen1322.bmp"
 
 #___________________________________________________________________
