@@ -38,7 +38,7 @@ touch bladelius/var/input
 touch bladelius/var/stat
 
 #volumio uses uses /etc/triggerhappy/triggers.d/audio.conf to control volume. need to comment out volume
-sudo nano uses /etc/triggerhappy/triggers.d/audio.conf
+sudo nano /etc/triggerhappy/triggers.d/audio.conf
 #VOLUME UP
 #KEY_VOLUMEUP 1 /usr/local/bin/volumio volume plus
 

@@ -69,6 +69,8 @@ cd /
 sudo tar -xvf /home/volumio/Oden/odenfiles.tar
 cd
 
+sudo ir-keytable -c -w /etc/rc_keymaps/bdg_oden
+
 echo -e "\e[92mInstalling Oden...\e[0m"
 chmod +x /home/volumio/Oden/oden.py #
 sudo cp /home/volumio/Oden/service-files/oden.service /lib/systemd/system/ #
