@@ -95,14 +95,6 @@ from luma.oled.device import ssd1322
 from modules.display1322 import*
 from ConfigurationFiles.ScreenConfig1322 import*
 
-if firstStart == True:
-    if ledTechnology == None:
-        from modules.StatusLEDempty import*
-    if ledTechnology == 'GPIOusage':
-        from modules.StatusLEDgpio import*
-    if ledTechnology == 'pcf8574usage':
-        from modules.StatusLEDpcf import*
-
 volumio_host = 'localhost'
 volumio_port = 3000
 volumioIO = SocketIO(volumio_host, volumio_port)
