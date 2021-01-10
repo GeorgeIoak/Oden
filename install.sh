@@ -65,7 +65,9 @@ sudo mount -osize=1M -t tmpfs tmpfs /mnt/ramdisk
 
 # Replace system files
 # TODO Change to reading and modifying
-tar -xf odenfiles.tar
+cd /
+sudo tar -xvf /home/volumio/Oden/odenfiles.tar
+cd
 
 echo -e "\e[92mInstalling Oden...\e[0m"
 chmod +x /home/volumio/Oden/oden.py #

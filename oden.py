@@ -55,19 +55,19 @@ sleep(5.0)
 #
 ScreenList = ['No-Spectrum']
 
-NowPlayingLayoutSave=open('/home/volumio/NR1-UI/ConfigurationFiles/LayoutSet.txt').readline().rstrip()
+NowPlayingLayoutSave=open('/home/volumio/Oden/ConfigurationFiles/LayoutSet.txt').readline().rstrip()
 print('Layout selected during setup: ', NowPlayingLayout)
 print('Last manually selected Layout: ', NowPlayingLayoutSave)
 
 if NowPlayingLayout not in ScreenList:
-    WriteScreen1 = open('/home/volumio/NR1-UI/ConfigurationFiles/LayoutSet.txt', 'w')
+    WriteScreen1 = open('/home/volumio/Oden/ConfigurationFiles/LayoutSet.txt', 'w')
     WriteScreen1.write('No-Spectrum')
     WriteScreen1.close
     NowPlayingLayout = 'No-Spectrum'
 
 if NowPlayingLayoutSave != NowPlayingLayout:
     if NowPlayingLayoutSave not in ScreenList and SpectrumActive == False:
-        WriteScreen1 = open('/home/volumio/NR1-UI/ConfigurationFiles/LayoutSet.txt', 'w')
+        WriteScreen1 = open('/home/volumio/Oden/ConfigurationFiles/LayoutSet.txt', 'w')
         WriteScreen1.write('No-Spectrum')
         WriteScreen1.close
         NowPlayingLayout = 'No-Spectrum'
@@ -394,7 +394,7 @@ def JPGPathfinder(String):
         JPGName = filenames[0]
         FullJPGPath = URLPath + JPGName
     except:
-        FullJPGPath = '/home/volumio/NR1-UI/NoCover.bmp'
+        FullJPGPath = '/home/volumio/Oden/NoCover.bmp'
     JPGSave(FullJPGPath)
     print('FullJPGPath: ', FullJPGPath)
 
@@ -422,7 +422,7 @@ def JPGSaveURL(link):
                 f.write(url.read())
         img = Image.open('temp.jpg')
     except:
-        img = Image.open('/home/volumio/NR1-UI/NoCover.bmp')    
+        img = Image.open('/home/volumio/Oden/NoCover.bmp')    
     width, height = img.size
     asp_rat = width/height
     new_width = 90
@@ -1080,7 +1080,7 @@ def RightKnob_PushEvent(hold_time):
             global NowPlayingLayout
             oled.SelectedScreen = oled.modal.SelectedOption()
             Screen = ScreenList[oled.SelectedScreen]
-            WriteSelScreen = open('/home/volumio/NR1-UI/ConfigurationFiles/LayoutSet.txt', 'w')
+            WriteSelScreen = open('/home/volumio/Oden/ConfigurationFiles/LayoutSet.txt', 'w')
             WriteSelScreen.write(Screen)
             WriteSelScreen.close
             NowPlayingLayout = Screen
