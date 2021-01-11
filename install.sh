@@ -10,12 +10,10 @@ sudo apt install -y build-essential libffi-dev libc6-dev libbz2-dev libexpat1-de
 zlib1g-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev \
 libsqlite3-dev libssl-dev tk-dev ir-keytable make git-core autoconf libtool
 
-sudo build-dep python3-lxml #
-
 cd #
 echo -e "\e[92mInstalling OpenSSL 1.1.1b\e[0m" #
-mkdir /home/volumio/src #
-cd /home/volumio/src && mkdir openssl && cd openssl #
+mkdir -p /home/volumio/src #
+cd /home/volumio/src && mkdir -p openssl && cd openssl #
 wget https://www.openssl.org/source/openssl-1.1.1b.tar.gz #
 tar xvf openssl-1.1.1b.tar.gz && cd openssl-1.1.1b #
 ./config --prefix=/home/volumio/src/openssl-1.1.1b --openssldir=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make install #
@@ -26,7 +24,7 @@ sudo ldconfig #
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/volumio/src/openssl-1.1.1b/lib #
 
 echo -e "\e[92mInstalling Python 3.8.5 and related modules\e[0m" #
-cd /home/volumio/src && mkdir python && cd python #
+cd /home/volumio/src && mkdir -p python && cd python #
 wget https://www.python.org/ftp/python/3.8.5/Python-3.8.5.tar.xz #
 tar xf Python-3.8.5.tar.xz #
 cd Python-3.8.5 #
@@ -34,7 +32,7 @@ sudo cp /home/volumio/Oden/ConfigurationFiles/python/Setup /home/volumio/src/pyt
 ./configure --prefix=/home/volumio/src/Python-3.8.5 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make altinstall #
 
 export PATH=/home/volumio/src/Python-3.8.5/bin:$PATH #
-export LD_LIBRARY_PATh=/home/volumio/src/Python-3.8.5/bin #
+export LD_LIBRARY_PATH=/home/volumio/src/Python-3.8.5/bin #
 
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U pip #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U setuptools #
@@ -43,7 +41,7 @@ sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev 
 python-rpi.gpio libcurl4-openssl-dev libssl-dev libfftw3-dev \
 libasound2-dev libncursesw5-dev libpulse-dev #
 
-sudo apt build-dep python3-lxml # Needed for selectors
+sudo apt-get build-dep python3-lxml # Needed for selectors
 
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade setuptools pip wheel #
 sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade luma.oled #
@@ -52,8 +50,8 @@ psutil socketIO-client pycurl gpiozero readchar numpy requests smbus evdev confi
 echo -e "\e[92mAll Python related modules are installed...\e[0m" #
 cd #
 
-mkdir bladelius
-mkdir bladelius/var
+mkdir -p bladelius
+mkdir -p bladelius/var
 touch bladelius/var/mute
 touch bladelius/var/vol
 touch bladelius/var/input
@@ -71,6 +69,8 @@ cd /
 sudo tar -xvf /home/volumio/Oden/odenfiles.tar
 cd
 
+# This might fail since a reboot is needed to install IR first so try this
+sudo dtoverlay rotary-encoder pin_a=23 pin_b=22 relative_axis=1 steps-per-period=2
 sudo ir-keytable -c -w /etc/rc_keymaps/bdg_oden
 
 echo -e "\e[92mInstalling Oden...\e[0m"
