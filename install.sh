@@ -23,19 +23,21 @@ sudo cp /home/volumio/Oden/ConfigurationFiles/ldconf/libc.conf /etc/ld.so.conf.d
 sudo ldconfig #
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/volumio/src/openssl-1.1.1b/lib #
 
-echo -e "\e[92mInstalling Python 3.8.5 and related modules\e[0m" #
+echo -e "\e[92mInstalling Python 3.9.1 and related modules\e[0m" #
 cd /home/volumio/src && mkdir -p python && cd python #
-wget https://www.python.org/ftp/python/3.8.5/Python-3.8.5.tar.xz #
-tar xf Python-3.8.5.tar.xz #
-cd Python-3.8.5 #
-sudo cp /home/volumio/Oden/ConfigurationFiles/python/Setup /home/volumio/src/python/Python-3.8.5/Modules #
-./configure --prefix=/home/volumio/src/Python-3.8.5 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make altinstall #
+wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz #
+tar xf Python-3.9.1.tar.xz #
+cd Python-3.9.1 #
+# Seems to be an error in Python source
+cp /home/volumio/src/python/Python-3.9.1/Python/hashtable.* /home/volumio/src/python/Python-3.9.1/Modules/.
+sudo cp /home/volumio/Oden/ConfigurationFiles/python/Setup /home/volumio/src/python/Python-3.9.1/Modules #
+./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make altinstall #
 
-export PATH=/home/volumio/src/Python-3.8.5/bin:$PATH #
-export LD_LIBRARY_PATH=/home/volumio/src/Python-3.8.5/bin #
+export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
+export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #
 
-sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U pip #
-sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install -U setuptools #
+sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install -U pip #
+sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install -U setuptools #
 
 sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev \
 python-rpi.gpio libcurl4-openssl-dev libssl-dev libfftw3-dev \
@@ -43,9 +45,9 @@ libasound2-dev libncursesw5-dev libpulse-dev #
 
 sudo apt-get build-dep python3-lxml # Needed for selectors
 
-sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade setuptools pip wheel #
-sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install --upgrade luma.oled #
-sudo /home/volumio/src/Python-3.8.5/bin/pip3.8 install \
+sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade setuptools pip wheel #
+sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade luma.oled #
+sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install \
 psutil socketIO-client pycurl gpiozero readchar numpy requests smbus evdev config selectors #
 echo -e "\e[92mAll Python related modules are installed...\e[0m" #
 cd #
@@ -56,6 +58,16 @@ touch bladelius/var/mute
 touch bladelius/var/vol
 touch bladelius/var/input
 touch bladelius/var/stat
+
+FILE=/home/volumio/.bash_aliases
+if [ -f "$FILE" ]; then
+    echo "$FILE exists."
+else 
+    touch /home/volumio/.bash_aliases
+    echo "ln -s /home/volumio/src/Python-3.9.1/bin/python3.9 /usr/local/bin/python39" >> /home/volumio/.bash_aliases
+    echo "ln -s /home/volumio/src/Python-3.9.1/bin/pip3.9 /usr/local/bin/pip39" >> /home/volumio/.bash_aliases
+    echo "$FILE added."
+fi
 
 # Set up RAM Drive
 # TODO Change system state writes to use this RAM Drive

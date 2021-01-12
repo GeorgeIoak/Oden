@@ -25,8 +25,8 @@ sudo nano /etc/rc_maps.cfg
 #driver table                    file
 *       *                        /etc/rc_keymaps/bdg_oden
 
-ln -s /home/volumio/src/Python-3.8.5/bin/python3.8 /usr/local/bin/python38
-ln -s /home/volumio/src/Python-3.8.5/bin/pip3.8 /usr/local/bin/pip38
+ln -s /home/volumio/src/Python-3.9.1/bin/python3.9 /usr/local/bin/python39
+ln -s /home/volumio/src/Python-3.9.1/bin/pip3.9 /usr/local/bin/pip39
 pip38 install pcf8574, evdev, config
 
 #copy config.py
