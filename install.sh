@@ -6,9 +6,9 @@ echo "_________________________________________________________ " #
 sudo dpkg-reconfigure tzdata #
 sudo apt update #
 
-sudo apt install -y build-essential libffi-dev libc6-dev libbz2-dev libexpat1-dev liblzma-dev \
-zlib1g-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev \
-libsqlite3-dev libssl-dev tk-dev ir-keytable make git-core autoconf libtool
+sudo apt install -y build-essential libffi-dev libc6-dev libbz2-dev libexpat1-dev liblzma-dev\
+ zlib1g-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev\
+ libsqlite3-dev libssl-dev tk-dev ir-keytable make git-core autoconf libtool
 
 cd #
 echo -e "\e[92mInstalling OpenSSL 1.1.1b\e[0m" #
@@ -35,19 +35,16 @@ cp /home/volumio/Oden/ConfigurationFiles/python/Setup.local /home/volumio/src/py
 export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
 export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #
 
-sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install -U pip #
-sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install -U setuptools #
+sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev\
+ python-rpi.gpio libcurl4-openssl-dev libssl-dev libfftw3-dev\
+ libasound2-dev libncursesw5-dev libpulse-dev #
 
-sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev \
-python-rpi.gpio libcurl4-openssl-dev libssl-dev libfftw3-dev \
-libasound2-dev libncursesw5-dev libpulse-dev #
+sudo apt-get -y build-dep python3-lxml # Needed for selectors
 
-sudo apt-get build-dep python3-lxml # Needed for selectors
-
-sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade setuptools pip wheel #
-sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade luma.oled #
-sudo /home/volumio/src/Python-3.9.1/bin/pip3.9 install \
-psutil socketIO-client pycurl gpiozero readchar numpy requests smbus evdev config selectors #
+/home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade setuptools pip wheel #
+/home/volumio/src/Python-3.9.1/bin/pip3.9 install --upgrade luma.oled #
+/home/volumio/src/Python-3.9.1/bin/pip3.9 install\
+ psutil socketIO-client pycurl gpiozero readchar numpy requests smbus evdev config selectors #
 echo -e "\e[92mAll Python related modules are installed...\e[0m" #
 cd #
 
@@ -80,7 +77,8 @@ cd /
 sudo tar -xvf /home/volumio/Oden/odenfiles.tar
 cd
 
-# This might fail since a reboot is needed to install IR first so try this
+# Add these now before boot so ir-keytable command can find the IR
+sudo dtoverlay=gpio-ir gpio_pin=18 gpio_in_pull=up
 sudo dtoverlay rotary-encoder pin_a=23 pin_b=22 relative_axis=1 steps-per-period=2
 sudo ir-keytable -c -w /etc/rc_keymaps/bdg_oden
 
