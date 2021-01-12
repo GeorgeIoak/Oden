@@ -152,7 +152,7 @@ def listenRemote():
                                     curVol += volStep
                                 if (remCode == btnVolDwn) and (curVol <= 0):
                                     curVol = 0
-                                elif (curVol <= 0):
+                                elif (remCode == btnVolDwn):
                                         curVol -= volStep
                                 print("Current volume is: ", curVol)
                                 dbVol = volTable[curVol]
