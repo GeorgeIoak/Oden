@@ -78,7 +78,7 @@ sudo tar -xvf /home/volumio/Oden/odenfiles.tar
 cd
 
 # Add these now before boot so ir-keytable command can find the IR
-sudo dtoverlay=gpio-ir gpio_pin=18 gpio_in_pull=up
+sudo dtoverlay gpio-ir gpio_pin=18 # gpio_in_pull=up
 sudo dtoverlay rotary-encoder pin_a=23 pin_b=22 relative_axis=1 steps-per-period=2
 sudo ir-keytable -c -w /etc/rc_keymaps/bdg_oden
 
