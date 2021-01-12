@@ -16,7 +16,7 @@ mkdir -p /home/volumio/src #
 cd /home/volumio/src && mkdir -p openssl && cd openssl #
 wget https://www.openssl.org/source/openssl-1.1.1b.tar.gz #
 tar xvf openssl-1.1.1b.tar.gz && cd openssl-1.1.1b #
-./config --prefix=/home/volumio/src/openssl-1.1.1b --openssldir=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make install #
+./config --prefix=/home/volumio/src/openssl-1.1.1b --openssldir=/home/volumio/src/openssl-1.1.1b && make -j4 && make install #
 
 cd #
 sudo cp /home/volumio/Oden/ConfigurationFiles/ldconf/libc.conf /etc/ld.so.conf.d #
@@ -31,7 +31,7 @@ cd Python-3.9.1 #
 # Seems to be an error in Python source
 cp /home/volumio/src/python/Python-3.9.1/Python/hashtable.* /home/volumio/src/python/Python-3.9.1/Modules/.
 sudo cp /home/volumio/Oden/ConfigurationFiles/python/Setup /home/volumio/src/python/Python-3.9.1/Modules #
-./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && sudo make altinstall #
+./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && make altinstall #
 
 export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
 export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #
