@@ -33,7 +33,7 @@ from modules.pushbutton import PushButton
 from modules.rotaryencoder import RotaryEncoder
 import modules.odenremote as oden
 import uuid
-import numpy as np
+#import numpy as np
 from ConfigurationFiles.PreConfiguration import*
 from ConfigurationFiles.config import*
 import urllib.request
@@ -43,7 +43,7 @@ from urllib.parse import urlencode
 import ssl
 import re
 import fnmatch
-sleep(5.0)
+sleep(3.0)
 #________________________________________________________________________________________
 #	
 #   ______            _____                        __  _                 
@@ -249,12 +249,17 @@ def StandByWatcher():
             sleep(1)
 
 def sigterm_handler(signal, frame):
+    oled.clear()
+    image.paste(('black'), [0, 0, oled.WIDTH, oled.HEIGHT])
+    oled.display(image)
+    print("Made it into sigterm_handler")
+    show_logo("ShutdownScreen1322.bmp", oled)
     oled.ShutdownFlag = True
     volumioIO.emit('stop')
-    GPIO.output(13, GPIO.LOW)
-    oled.clear()
-    print("Made it into sigterm_handler")
-    show_logo("shutdown.ppm", oled)
+    # GPIO.output(13, GPIO.LOW) # Not using standby circuit for now
+    oden.cleanup()
+    sleep(1)
+    sys.exit()
 #________________________________________________________________________________________
 #________________________________________________________________________________________
 #

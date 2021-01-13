@@ -30,7 +30,8 @@ tar xf Python-3.9.1.tar.xz #
 cd Python-3.9.1 #
 #cp /home/volumio/src/python/Python-3.9.1/Python/hashtable.* /home/volumio/src/python/Python-3.9.1/Modules/.
 cp /home/volumio/Oden/ConfigurationFiles/python/Setup.local /home/volumio/src/python/Python-3.9.1/Modules #
-./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make -j4 && make altinstall #
+# Without optimization you can use -j4, but with it you'll get segfault
+./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make profile-opt && make altinstall #
 
 export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
 export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #
