@@ -66,7 +66,7 @@ if NowPlayingLayout not in ScreenList:
     NowPlayingLayout = 'No-Spectrum'
 
 if NowPlayingLayoutSave != NowPlayingLayout:
-    if NowPlayingLayoutSave not in ScreenList and SpectrumActive == False:
+    if NowPlayingLayoutSave not in ScreenList and not SpectrumActive:
         WriteScreen1 = open('/home/volumio/Oden/ConfigurationFiles/LayoutSet.txt', 'w')
         WriteScreen1.write('No-Spectrum')
         WriteScreen1.close
@@ -99,7 +99,7 @@ volumio_host = 'localhost'
 volumio_port = 3000
 volumioIO = SocketIO(volumio_host, volumio_port)
 
-if StandbyActive == True:
+if StandbyActive:
     GPIO.setup(13, GPIO.OUT)
     GPIO.setup(26, GPIO.IN)
     GPIO.output(13, GPIO.HIGH)
@@ -307,7 +307,7 @@ def GetWLANIP():
 #                                 /_/            
 #
 signal.signal(signal.SIGTERM, sigterm_handler)
-if StandbyActive == True and firstStart == True:
+if StandbyActive and firstStart:
     StandByListen = threading.Thread(target=StandByWatcher, daemon=True)
     StandByListen.start()
     if ledActive != True:
@@ -325,7 +325,7 @@ GetIP()
 #            /_/            /____/           /_/                                 
 #
 def display_update_service():
-    while UPDATE_INTERVAL > 0 and oled.ShutdownFlag == False:
+    while UPDATE_INTERVAL > 0 and not oled.ShutdownFlag:
         prevTime = time()
         dt = time() - prevTime
         if oled.stateTimeout > 0:
@@ -474,31 +474,31 @@ def onPushState(data):
             newFormat = ''
         if newFormat is None:
             newFormat = ''
-        if newFormat == True and newSong != 'HiFiBerry ADC':
+        if newFormat and newSong != 'HiFiBerry ADC':
             newFormat = 'WebRadio'
             oled.activeFormat = newFormat
-        if newFormat == True and newSong == 'HiFiBerry ADC':
+        if newFormat and newSong == 'HiFiBerry ADC':
             newFormat = 'Live-Stream'
             oled.activeFormat = newFormat
                	
 #        if 'stream' in data:
 #            newFormat = data['stream']
-#            if newFormat == False:
+#            if not newFormat:
 #                newFormat = newTrackType
 #                oled.activeFormat = newFormat
 #            if newFormat is None:
 #                newFormat = ''
 #                oled.activeFormat = newFormat
-#            if newFormat == True and newSong != 'HiFiBerry ADC':
+#            if newFormat and newSong != 'HiFiBerry ADC':
 #                newFormat = 'WebRadio'
 #                oled.activeFormat = newFormat
-#            if newFormat == True and newSong == 'HiFiBerry ADC':
+#            if newFormat and newSong == 'HiFiBerry ADC':
 #                newFormat = 'Live-Stream'
 #                oled.activeFormat = newFormat
                 
     	#If a stream (like webradio) is playing, the data set for 'stream'/newFormat is a boolian (True)
     	#drawOn can't handle that and gives an error. 
-    	#therefore we use "if newFormat == True:" and define a placeholder Word, you can change it.
+    	#therefore we use "if newFormat:" and define a placeholder Word, you can change it.
     
         if 'samplerate' in data:
             newSamplerate = data['samplerate']
@@ -552,7 +552,7 @@ def onPushState(data):
         if 'mute' in data:
             oled.mute = data['mute']
 
-        if ledActive == True and 'channels' in data:
+        if ledActive and 'channels' in data:
             channels = data['channels']
             if newStatus != 'stop':
                 if channels == 2:
@@ -573,7 +573,7 @@ def onPushState(data):
             oled.seek = data['seek']
         else:
             oled.seek = None
-        if NR1UIRemoteActive == True:
+        if NR1UIRemoteActive:
             if 'albumart' in data:
                 newAlbumart = data['albumart']
             else:
@@ -606,11 +606,11 @@ def onPushState(data):
             ScrollSongFirstRound = True
             ScrollSongNextRound = False
             if oled.state == STATE_PLAYER and newStatus != 'stop':                                          #this is the "NowPlayingScreen"
-                if ledActive == True:
+                if ledActive:
                    PlayLEDon()
                 oled.modal.UpdatePlayingInfo()     #here is defined which "data" should be displayed in the class
             if oled.state == STATE_PLAYER and newStatus == 'stop':                                          #this is the "Standby-Screen"
-                if ledActive == True:
+                if ledActive:
                    PlayLEDoff()
                    StereoLEDoff()
             
@@ -621,16 +621,16 @@ def onPushState(data):
             if oled.state == STATE_PLAYER:
                 if oled.playState != 'stop':
                     if newStatus == 'pause':
-                        if ledActive == True:
+                        if ledActive:
                             PlayLEDoff()
                         oled.playstateIcon = oledpauseIcon
                     if newStatus == 'play':
-                        if ledActive == True:
+                        if ledActive:
                             PlayLEDon()
                         oled.playstateIcon = oledplayIcon
                     oled.modal.UpdatePlayingInfo()
                 else:
-                    if ledActive == True:
+                    if ledActive:
                         PlayLEDoff()
                         StereoLEDoff()
                     ScrollArtistTag = 0
@@ -644,10 +644,10 @@ def onPushState(data):
                     SetState(STATE_PLAYER)
                     oled.modal.UpdateStandbyInfo()
         
-        if NR1UIRemoteActive == True:
+        if NR1UIRemoteActive:
             if newAlbumart != oled.activeAlbumart:
                 oled.activeAlbumart = newAlbumart
-                if AlbumArtHTTP is True and newFormat == 'WebRadio':
+                if AlbumArtHTTP and newFormat == 'WebRadio':
                     JPGSaveURL(newAlbumart)
                 else:
                     albumdecode = urllib.parse.unquote(newAlbumart, encoding='utf-8', errors='replace')
@@ -745,11 +745,11 @@ class NowPlayingScreen():
                 self.ArtistWidth, self.ArtistHeight = self.draw.textsize(oled.activeArtist, font=font)
                 self.ArtistStopPosition = self.ArtistWidth - self.width + ArtistEndScrollMargin
                 if self.ArtistWidth >= self.width:
-                    if ScrollArtistFirstRound == True:
+                    if ScrollArtistFirstRound:
                         ScrollArtistFirstRound = False
                         ScrollArtistTag = 0
                         self.ArtistPosition = (Screen4text01)
-                    elif ScrollArtistFirstRound == False and ScrollArtistNextRound == False:
+                    elif not ScrollArtistFirstRound and not ScrollArtistNextRound:
                         if ScrollArtistTag <= self.ArtistWidth - 1:
                             ScrollArtistTag += ArtistScrollSpeed
                             self.ArtistPosition = (-ScrollArtistTag ,Screen4text01[1])
@@ -758,11 +758,11 @@ class NowPlayingScreen():
                             ScrollArtistTag = 0
                             ScrollArtistNextRound = True
                             ScrollArtistNext = self.width + ArtistEndScrollMargin
-                    if ScrollArtistNextRound == True:        
+                    if ScrollArtistNextRound:        
                         if ScrollArtistNext >= 0:                    
                             self.ArtistPosition = (ScrollArtistNext ,Screen4text01[1])
                             ScrollArtistNext -= ArtistScrollSpeed
-                        elif ScrollArtistNext == -ArtistScrollSpeed and ScrollArtistNextRound == True:
+                        elif ScrollArtistNext == -ArtistScrollSpeed and ScrollArtistNextRound:
                             ScrollArtistNext = 0
                             ScrollArtistNextRound = False
                             ScrollArtistFirstRound = False
@@ -775,11 +775,11 @@ class NowPlayingScreen():
                 self.SongWidth, self.SongHeight = self.draw.textsize(oled.activeSong, font=font3)
                 self.SongStopPosition = self.SongWidth - self.width + SongEndScrollMargin
                 if self.SongWidth >= self.width:
-                    if ScrollSongFirstRound == True:
+                    if ScrollSongFirstRound:
                         ScrollSongFirstRound = False
                         ScrollSongTag = 0
                         self.SongPosition = (Screen4text02)
-                    elif ScrollSongFirstRound == False and ScrollSongNextRound == False:
+                    elif not ScrollSongFirstRound and not ScrollSongNextRound:
                         if ScrollSongTag <= self.SongWidth - 1:
                             ScrollSongTag += SongScrollSpeed
                             self.SongPosition = (-ScrollSongTag ,Screen4text02[1])
@@ -788,11 +788,11 @@ class NowPlayingScreen():
                             ScrollSongTag = 0
                             ScrollSongNextRound = True
                             ScrollSongNext = self.width + SongEndScrollMargin
-                    if ScrollSongNextRound == True:        
+                    if ScrollSongNextRound:        
                         if ScrollSongNext >= 0:                    
                             self.SongPosition = (ScrollSongNext ,Screen4text02[1])
                             ScrollSongNext -= SongScrollSpeed
-                        elif ScrollSongNext == -SongScrollSpeed and ScrollSongNextRound == True:
+                        elif ScrollSongNext == -SongScrollSpeed and ScrollSongNextRound:
                             ScrollSongNext = 0
                             ScrollSongNextRound = False
                             ScrollSongFirstRound = False
@@ -809,15 +809,15 @@ class NowPlayingScreen():
                 else:
                     self.draw.text((Screen4Text0008), oled.activeFormat, font=font4, fill='white')
                     self.draw.text((Screen4text008), oled.bitrate, font=font4, fill='white')
-                if oled.repeat == True:
-                    if oled.repeatonce == False:
+                if oled.repeat:
+                    if not oled.repeatonce:
                         self.draw.text((Screen4text33), oledrepeat, font=labelfont, fill='white')
-                    if oled.repeatonce == True:
+                    if oled.repeatonce:
                         self.draw.text((Screen4text33), oledrepeat, font=labelfont, fill='white')
                         self.draw.text((Screen4text34), str(1), font=font4, fill='white')
-                if oled.shuffle == True:
+                if oled.shuffle:
                     self.draw.text((Screen4text35), oledshuffle, font=labelfont, fill='white')
-                if oled.mute == False:
+                if not oled.mute:
                     self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
                 else:
                     self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
@@ -1116,11 +1116,11 @@ ButtonD_Push.setCallback(ButtonD_PushEvent)
 #/_____/\____/\____/\__/     /_____/\____/\__, /\____/  (_)  
 #    
 show_logo(oledBootLogo, oled)
-if ledActive == True and firstStart == True:
+if ledActive and firstStart:
     SysStart()
 #show_logo(oled1BootLogo, oled)
 #show_logo2(oled2BootLogo, oled2)
-if ledActive == True and firstStart == True:
+if ledActive and firstStart:
     Processor = threading.Thread(target=CPUload, daemon=True)
     Processor.start()
     firstStart = False
@@ -1213,7 +1213,7 @@ while True:
     sleep(0.1)
 
 #this is the loop to push the actual time every 0.1sec to the "Standby-Screen"
-    if oled.state == STATE_PLAYER and newStatus == 'stop' and oled.ShutdownFlag == False:
+    if oled.state == STATE_PLAYER and newStatus == 'stop' and not oled.ShutdownFlag:
         InfoTag = 0  #resets the InfoTag helper from artist/song update loop
         oled.state = 0
         oled.time = strftime("%H:%M:%S")
@@ -1222,7 +1222,7 @@ while True:
         sleep(0.2)  
 
 #if playback is paused, here is defined when the Player goes back to "Standby"/Stop		
-    if oled.state == STATE_PLAYER and newStatus == 'pause' and varcanc == True:
+    if oled.state == STATE_PLAYER and newStatus == 'pause' and varcanc:
         secvar = int(round(time()))
         varcanc = False
     elif oled.state == STATE_PLAYER and newStatus == 'pause' and int(round(time())) - secvar > oledPause2StopTime:
