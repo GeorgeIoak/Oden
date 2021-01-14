@@ -1025,9 +1025,9 @@ def ButtonC_PushEvent(hold_time):
         oden.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
 def ButtonD_PushEvent(hold_time):
-    if oled.dimLevel == 3:
-        oled.dimLevel = 0
     oled.dimLevel += 1
+    if oled.dimLevel == 4:
+        oled.dimLevel = 0
     oled.contrast(dimLevels[oled.dimLevel])
     print('ButtonD short press event', oled.dimLevel)
 
