@@ -48,7 +48,7 @@ volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 looku
 
 try:
     i2c_port_num = 1
-    pcf_address = 0x38  #temp address from 0x3B PCF8574A: A0=H, A1=H, A2=L
+    pcf_address = 0x3B  #temp address was 0x38 from 0x3B PCF8574A: A0=H, A1=H, A2=L
     analogInput = smbus.SMBus(1)
     analogInput.write_byte(pcf_address, 0x00) # Set PCF8574A to all outputs
 except:
