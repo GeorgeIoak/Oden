@@ -335,7 +335,6 @@ def display_update_service():
             oled.timeOutRunning = False
             oled.stateTimeout = 0
             SetState(STATE_PLAYER)
-            print("Inside display_update for some reason")
         image.paste("black", [0, 0, image.size[0], image.size[1]])
         try:
             oled.modal.DrawOn(image)
@@ -496,9 +495,9 @@ def onPushState(data):
 #                newFormat = 'Live-Stream'
 #                oled.activeFormat = newFormat
                 
-    	#If a stream (like webradio) is playing, the data set for 'stream'/newFormat is a boolian (True)
-    	#drawOn can't handle that and gives an error. 
-    	#therefore we use "if newFormat:" and define a placeholder Word, you can change it.
+        #If a stream (like webradio) is playing, the data set for 'stream'/newFormat is a boolian (True)
+        #drawOn can't handle that and gives an error. 
+        #therefore we use "if newFormat:" and define a placeholder Word, you can change it.
     
         if 'samplerate' in data:
             newSamplerate = data['samplerate']
@@ -890,7 +889,8 @@ class OtherInputScreen():
 
     def DrawOn(self, image):
         self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-        self.draw.text((oledtext03), oden.analogInputs[oden.curInput], font=fontClock, fill='white')
+        self.draw.text((10, 4), oden.analogInputs[oden.curInput], font=fontClock, fill='white')
+        self.draw.text((175, 4), str(oden.curVol), font=fontClock, fill='white')
         self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
         self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
         self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
