@@ -1028,6 +1028,9 @@ def ButtonD_PushEvent(hold_time):
     oled.dimLevel += 1
     if oled.dimLevel == 4:
         oled.dimLevel = 0
+        oled.hide()
+    if oled.dimLevel == 1:
+        oled.show()
     oled.contrast(dimLevels[oled.dimLevel])
     print('ButtonD short press event', oled.dimLevel)
 
