@@ -8,7 +8,7 @@ import os
 import sys
 import spidev
 import smbus
-##import config
+#import config
 import threading
 from evdev import InputDevice, categorize, ecodes
 import selectors
@@ -16,6 +16,7 @@ from threading import Thread, Event
 import asyncio
 from queue import Queue
 from time import*
+from ConfigurationFiles.config import*  # File locations for saving states
 
 btnVolUp =  'KEY_VOLUMEUP' #2075 #"vol-up"  # 0x1B
 btnVolDwn = 'KEY_VOLUMEDOWN' #2076 #"vol-dwn"  # 0x1C
@@ -45,20 +46,28 @@ curVol = curVolLeft = curVolRight = 0
 old_vol = dbVol = 0
 volStep = 1
 volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 lookup table
+i2c_port_num = 1
+pcf_address = 0x3B  # temp address was 0x38 from 0x3B PCF8574A: A0=H, A1=H, A2=L
+SPI_PORT = 1  # PGA2320 is at /dev/spidev1.0
+SPI_DEVICE = 0
+
+# Connect to the I2C Expander for the Analog Inputs
+try:
+    analogInput = smbus.SMBus(i2c_port_num)
+except:
+    print("I2C bus problem")
 
 try:
-    i2c_port_num = 1
-    pcf_address = 0x3B  #temp address was 0x38 from 0x3B PCF8574A: A0=H, A1=H, A2=L
-    analogInput = smbus.SMBus(1)
     analogInput.write_byte(pcf_address, 0x00) # Set PCF8574A to all outputs
-except:
-    print("Could not connect to the PCF8574")
-
+except OSError as e:
+    print("Got", e, "error for address", pcf_address, "trying 0x38")
+    try:
+        analogInput.write_byte(0x38, 0x00) # Set PCF8574A to all outputs
+    except OSError as e:
+        print("Did not get a response form PCF8574")
 
 # Open SPI bus instance for PGA2320
 try:
-    SPI_PORT = 1
-    SPI_DEVICE = 0
     pga2320 = spidev.SpiDev()
     pga2320.open(SPI_PORT, SPI_DEVICE)
     pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
@@ -81,18 +90,14 @@ except (FileNotFoundError, PermissionError)as error:
 # TODO: need to use RAM Drive until shutting down
 
 # Write volume to file
-def save_vol(vol):
-    vol -= 40
-    f = open('/home/volumio/bladelius/var/vol', 'w')
-    f.write(str(vol))
-    f.close()
+def save_vol(curVol):
+    with open( vol, 'w') as f:  #f = open('/home/volumio/bladelius/var/vol', 'w')
+        f.write(str(CurVol))
 
 # Get volume from file
 def get_vol():
-    f = open('/home/volumio/bladelius/var/vol', 'r')
-    a = int(f.read())
-    f.close()
-    a += 40
+    with open( vol, 'r') as f:  #f = open('/home/volumio/bladelius/var/vol', 'r')
+        a = int(f.read())
     return a
 
 # PCF8574 Pin States:
@@ -143,7 +148,7 @@ def listenRemote():
                     if event.type == ecodes.EV_KEY:
                         events.put(event)
                         data = categorize(event)
-                        remCode = data.keycode #event.value
+                        remCode = data.keycode
                         if data.keystate >= 1: # Only on key down event, 2 is held down
                             if (remCode == btnVolUp) or (remCode == btnVolDwn):
                                 if (curVol > volMax) and (remCode == btnVolUp):
@@ -171,8 +176,7 @@ def listenRemote():
                                         else:
                                             curInput -= 1
                                 setAnalogInput(curInput)
-                                text = analogInputs[curInput]
-                                print("Current Input is: ", text)
+                                print("Current Input is: ", analogInputs[curInput])
                     if event.type == ecodes.EV_REL:
                         events.put(event)
                         curVol += event.value
@@ -187,8 +191,8 @@ def listenRemote():
         print("Had an IR exception", error)
 
 def cleanup():
-        pga2320.close()
-        analogInput.close()
-        IRsignal.close()
-        print("I just finished cleaning up!")
-        return
+    pga2320.close()
+    analogInput.close()
+    IRsignal.close()
+    print("I just finished cleaning up!")
+    return

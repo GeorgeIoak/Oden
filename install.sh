@@ -28,7 +28,6 @@ cd /home/volumio/src && mkdir -p python && cd python #
 wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz #
 tar xf Python-3.9.1.tar.xz #
 cd Python-3.9.1 #
-#cp /home/volumio/src/python/Python-3.9.1/Python/hashtable.* /home/volumio/src/python/Python-3.9.1/Modules/.
 cp /home/volumio/Oden/ConfigurationFiles/python/Setup.local /home/volumio/src/python/Python-3.9.1/Modules #
 # Without optimization you can use -j4, but with it you'll get segfault
 ./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make profile-opt && make altinstall #
@@ -37,8 +36,7 @@ export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
 export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #
 
 sudo apt install -y python3-dev python3-setuptools python3-pip libfreetype6-dev libjpeg-dev\
- python-rpi.gpio libcurl4-openssl-dev libssl-dev libfftw3-dev\
- libasound2-dev libncursesw5-dev libpulse-dev #
+ python-rpi.gpio libcurl4-openssl-dev libfftw3-dev libasound2-dev libpulse-dev #
 
 sudo apt-get -y build-dep python3-lxml # Needed for selectors
 
@@ -56,15 +54,32 @@ touch bladelius/var/vol
 touch bladelius/var/input
 touch bladelius/var/stat
 
+# Don't need to add to bash_aliases
 FILE=/home/volumio/.bash_aliases
 if [ -f "$FILE" ]; then
     echo "$FILE exists."
-else 
-    touch /home/volumio/.bash_aliases
-    echo "ln -s /home/volumio/src/Python-3.9.1/bin/python3.9 /usr/local/bin/python39" >> /home/volumio/.bash_aliases
-    echo "ln -s /home/volumio/src/Python-3.9.1/bin/pip3.9 /usr/local/bin/pip39" >> /home/volumio/.bash_aliases
-    echo "$FILE added."
+    rm $FILE
 fi
+
+declare -A FILES
+FILES=(
+    ["python3.9"]="/usr/local/bin/python39"
+    ["pip3.9"]="/usr/local/bin/pip39"
+    )
+for thefile in "${!FILES[@]}"
+do
+    if [[ -L ${FILES[$thefile]} ]]; then
+        if [[ -e ${FILES[$thefile]} ]]; then
+            echo "${FILES[$thefile]} exists and link is good"
+        else
+            unlink ${FILES[$thefile]}
+            echo "${FILES[$thefile]} link was broken so it was removed"
+        fi
+    else
+        echo "${FILES[$thefile]} isn't a link, I'll add it"
+        ln -s "/home/volumio/src/Python-3.9.1/bin/$thefile" ${FILES[$thefile]}
+    fi
+done
 
 # Set up RAM Drive
 # TODO Change system state writes to use this RAM Drive
