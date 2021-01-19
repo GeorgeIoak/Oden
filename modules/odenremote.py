@@ -43,7 +43,7 @@ volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
 
 curInput = 0  # What Source Input are we currently at
 remCode = ''  # Current remote code with toggle bit masked off
-curVol = curVolLeft = curVolRight = 0
+curVol = 0
 old_vol = dbVol = 0
 volStep = 1
 volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 lookup table
@@ -66,6 +66,8 @@ except OSError as e:
         analogInput.write_byte(0x38, 0x00) # Set PCF8574A to all outputs
     except OSError as e:
         print("Did not get a response form PCF8574")
+    else:
+        pcf_address = 0x38  # For George's test board
 
 # Open SPI bus instance for PGA2320
 try:

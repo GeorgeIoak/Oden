@@ -1238,7 +1238,7 @@ while True:
     if not oden.events.empty():
         event = oden.events.get_nowait()
         if oden.curInput != selectedInput:
-            if oden.curInput == 6:
+            if oden.curInput == 7:
                 volumioIO.emit('getState', '', onPushState)
                 SetState(STATE_PLAYER)
                 print("curInput is volumio", oled.state, newStatus)
