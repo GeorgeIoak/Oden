@@ -27,7 +27,8 @@ digitalInputs = ["SPDIF 1", "SPDIF 2", "OPTICAL 1",
             "OPTICAL 2", "AES", "OPT 2", "DIG", "USB", " "]
 
 analogInputs = ["BAL 1", "BAL 2", "LINE 1", "LINE 2",
-            "LINE 3", "LINE 4", "LINE 5"]
+            "LINE 3", "LINE 4", "LINE 5", "DIGITAL"]
+numInputs = len(analogInputs) - 1 # Used for loops
 
 volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
             80, 84, 88, 92, 94, 96, 98, 100, 102, 104, 106, 108, 
@@ -108,6 +109,7 @@ def get_vol():
 # LINE 3                 D0=X,D1=L,D2=H,D3=L,D4=L,D5=L,D6=L,D7=X 4
 # LINE 4                 D0=X,D1=H,D2=L,D3=L,D4=L,D5=L,D6=L,D7=X 5
 # LINE 5 (TAPE)(LOOP)    D0=X,D1=L,D2=L,D3=L,D4=L,D5=H,D6=L,D7=X 6
+# DIG/PHONO              D0=L,D1=L,D2=L,D3=L,D4=L,D5=H,D6=H,D7=H 7
 
 def bal1(): #0xC1 / 0b1100 0001
     analogInput.write_byte(pcf_address, 0b11000001)
@@ -123,6 +125,8 @@ def line4(): #0x03 / 0b0000 0011
     analogInput.write_byte(pcf_address, 0b00000011)
 def line5(): #0x21 / 0b0010 0001
     analogInput.write_byte(pcf_address, 0b00100001)
+def digital(): #0xC0 / 0b1100 0000
+    analogInput.write_byte(pcf_address, 0b11000000)
 
 switcherDigital = { 
     0: bal1,
@@ -131,7 +135,8 @@ switcherDigital = {
     3: line2,
     4: line3,
     5: line4,
-    6: line5
+    6: line5,
+    7: digital
 }
 
 def setAnalogInput(theInput):
@@ -163,7 +168,7 @@ def listenRemote():
                                 dbVol = volTable[curVol]
                                 pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                             if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
-                                if curInput == 6 and remCode == btnSrcUp:
+                                if curInput == numInputs and remCode == btnSrcUp:
                                     curInput = 0
                                 else:
                                     if remCode == btnSrcUp:
@@ -172,7 +177,7 @@ def listenRemote():
                                     else:
                                         print("SOURCE - was pressed")
                                         if curInput == 0:
-                                            curInput = 6
+                                            curInput = numInputs
                                         else:
                                             curInput -= 1
                                 setAnalogInput(curInput)

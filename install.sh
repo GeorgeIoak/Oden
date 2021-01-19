@@ -23,14 +23,19 @@ sudo cp /home/volumio/Oden/ConfigurationFiles/ldconf/libc.conf /etc/ld.so.conf.d
 sudo ldconfig #
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/volumio/src/openssl-1.1.1b/lib #
 
-echo -e "\e[92mInstalling Python 3.9.1 and related modules\e[0m" #
-cd /home/volumio/src && mkdir -p python && cd python #
-wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz #
-tar xf Python-3.9.1.tar.xz #
-cd Python-3.9.1 #
-cp /home/volumio/Oden/ConfigurationFiles/python/Setup.local /home/volumio/src/python/Python-3.9.1/Modules #
-# Without optimization you can use -j4, but with it you'll get segfault
-./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make profile-opt && make altinstall #
+version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
+if [[ $version < 3.9.0]]; then
+    echo -e "\e[92mInstalling Python 3.9.1 and related modules\e[0m" #
+    cd /home/volumio/src && mkdir -p python && cd python #
+    wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz #
+    tar xf Python-3.9.1.tar.xz #
+    cd Python-3.9.1 #
+    cp /home/volumio/Oden/ConfigurationFiles/python/Setup.local /home/volumio/src/python/Python-3.9.1/Modules #
+    # Without optimization you can use -j4, but with it you'll get segfault
+    ./configure --prefix=/home/volumio/src/Python-3.9.1 --with-openssl=/home/volumio/src/openssl-1.1.1b && make profile-opt && make altinstall #
+else
+    echo -e "\e[92mAll Python $version is already installed...\e[0m" #
+fi
 
 export PATH=/home/volumio/src/Python-3.9.1/bin:$PATH #
 export LD_LIBRARY_PATH=/home/volumio/src/Python-3.9.1/bin #

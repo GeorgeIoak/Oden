@@ -1238,10 +1238,10 @@ while True:
     if not oden.events.empty():
         event = oden.events.get_nowait()
         if oden.curInput != selectedInput:
-            if oden.curInput == 1:
+            if oden.curInput == 6:
                 volumioIO.emit('getState', '', onPushState)
                 SetState(STATE_PLAYER)
-                print("curInput = 1", oled.state, newStatus)
+                print("curInput is volumio", oled.state, newStatus)
                 oled.modal.UpdatePlayingInfo()
             else: # TODO Only need to change state once
                 SetState(STATE_OTHER_INPUT)
