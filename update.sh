@@ -5,6 +5,7 @@ echo "" #
 echo "_________________________________________________________ " #
 sudo systemctl stop oden.service
 cd /home/volumio/Oden
+git reset --hard
 git pull
 sudo systemctl start oden.service
 echo "" #
