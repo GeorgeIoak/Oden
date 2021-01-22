@@ -24,7 +24,7 @@ sudo ldconfig #
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/volumio/src/openssl-1.1.1b/lib #
 
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
-if [[ $version < 3.9.0]]; then
+if [[ $version < 3.9.0 ]]; then
     echo -e "\e[92mInstalling Python 3.9.1 and related modules\e[0m" #
     cd /home/volumio/src && mkdir -p python && cd python #
     wget https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz #
