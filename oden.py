@@ -468,18 +468,12 @@ def onPushState(data):
 
         if 'trackType' in data:
             newFormat = data['trackType']
-            oled.activeFormat = newFormat
         else:
             newFormat = ''
         if newFormat is None:
             newFormat = ''
-        if newFormat and newSong != 'HiFiBerry ADC':
-            newFormat = 'WebRadio'
-            oled.activeFormat = newFormat
-        if newFormat and newSong == 'HiFiBerry ADC':
-            newFormat = 'Live-Stream'
-            oled.activeFormat = newFormat
-               	
+        oled.activeFormat = newFormat
+
 #        if 'stream' in data:
 #            newFormat = data['stream']
 #            if not newFormat:
