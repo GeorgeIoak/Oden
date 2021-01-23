@@ -1,8 +1,8 @@
 #!/bin/bash
-boldRed = "\e[1;91m"
+boldRed="\e[1;91m"
 green="\e[0;92m"
-yellow = "\e[0;33m"
-reset = "\e[0m"
+yellow="\e[0;33m"
+reset="\e[0m"
 
 
 set +e #
