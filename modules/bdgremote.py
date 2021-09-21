@@ -2,8 +2,6 @@
 #coding: utf8
 # TODO Change this to a class (?) 
 
-#import lirc
-#import time
 import os
 import sys
 import spidev
@@ -16,15 +14,16 @@ from threading import Thread, Event
 import asyncio
 from queue import Queue
 from time import*
+sys.path.insert(0, r'/home/volumio/Oden')
 from ConfigurationFiles.config import*  # File locations for saving states
+import json
+import ast
+from configparser import ConfigParser, BasicInterpolation
 
 btnVolUp =  'KEY_VOLUMEUP' #2075 #"vol-up"  # 0x1B
 btnVolDwn = 'KEY_VOLUMEDOWN' #2076 #"vol-dwn"  # 0x1C
 btnSrcUp =  'KEY_NEXT' #2071 #"next"  # 0x17
 btnSrcDwn = 'KEY_PREVIOUS' #2072 #"prev"  # 0x18
-
-analogInputs = []
-digitalInputs = []
 
 volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
             80, 84, 88, 92, 94, 96, 98, 100, 102, 104, 106, 108, 
@@ -38,30 +37,39 @@ volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
 
 
 curInput = 0  # What Source Input are we currently at
+prevInput = 0  # What Source Input was before
 remCode = ''  # Current remote code with toggle bit masked off
 curVol = 0
 old_vol = dbVol = 0
 volStep = 1
 volMax = len(volTable) - 1  # PGA2320 range is 0-255 but we'll use a 0-100 lookup table
+
+SPI_PORT = 1  # PGA2320 is at /dev/spidev1.0
+SPI_DEVICE = 0
 i2c_port_num = 1
-pcf_address = 0x3B  # temp address was 0x38 from 0x3B PCF8574A: A0=H, A1=H, A2=L
-tyr = [0x20, 0x27]  # 2 PCF8574 devices define a Tyr
-oden = [0x22, 0x23, 0x24]
-digitalBoard = [0x21, 0x39]  # PCF8574(A) address set to 001, either or address, not both
-phonoBoard = [0x25]
 isTyr = False
 isOden = False
 isDigital = False
 isPhono = False
-SPI_PORT = 1  # PGA2320 is at /dev/spidev1.0
-SPI_DEVICE = 0
+whatDoWeHave = []
+theInputs = {}
 
+# initialization.py needs to run first to modify setup.ini properly
+setupFile = '/home/volumio/bladelius/ConfigurationFiles/setup.ini'
+theProduct = ConfigParser(inline_comment_prefixes=(
+    ';',), interpolation=BasicInterpolation())
+theProduct.read(setupFile)  # File used to get product settings
+theInputs.update(ast.literal_eval(theProduct['PRODUCT']['theinputs']))
+numInputs = len(theInputs) - 1  # Used for loops
+
+dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
+""" 
 # Connect to the I2C Bus
 try:
     i2cBus = SMBus(i2c_port_num)
 except:
     print("I2C bus problem")
-
+ """
 # Open SPI bus instance for PGA2320
 try:
     pga2320 = spidev.SpiDev()
@@ -95,7 +103,7 @@ def get_vol():
     with open( vol, 'r') as f:  #f = open('/home/volumio/bladelius/var/vol', 'r')
         a = int(f.read())
     return a
-
+""" 
 # PCF8574 Pin States:
 # BAL 1=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=H 0
 # BAL 2=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=L 1
@@ -137,11 +145,29 @@ switcherDigital = {
 def setAnalogInput(theInput):
     func = switcherDigital.get(theInput, "whoops")
     return func()
+ """
+
+def setInput(prevInput, theInput, dacAddress):
+    pcfAddress = list(theInputs.values())[theInput][0]
+    pcfBits = list(theInputs.values())[theInput][1]
+    last9068state = list(theInputs.values())[prevInput][2]
+    cur9068state = list(theInputs.values())[theInput][2]
+    print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
+    print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
+    with SMBus(1) as i2cBus:
+        i2cBus.write_byte(pcfAddress, pcfBits)
+        if last9068state != cur9068state:
+            if cur9068state == 'I2S':
+                dacValue = 0b10000100  # Setting for Auto DSD/I2S
+            else:
+                dacValue = 0b10000001  # Setting for SPDIF Input ONLY
+            print("We Would write to %d , Register 28, with %d"%(dacAddress, dacValue))
+#            i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
 
 def listenRemote():
-    try:
+#    try:
         while True:
-            global curVol, curInput  # Needs to be global so values can be passed back to oden.py
+            global curVol, prevInput, curInput  # Needs to be global so values can be passed back to oden.py
             for key, mask in selector.select():
                 device = key.fileobj
                 for event in device.read():
@@ -163,6 +189,7 @@ def listenRemote():
                                 dbVol = volTable[curVol]
                                 pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                             if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
+                                prevInput = curInput
                                 if curInput == numInputs and remCode == btnSrcUp:
                                     curInput = 0
                                 else:
@@ -175,8 +202,8 @@ def listenRemote():
                                             curInput = numInputs
                                         else:
                                             curInput -= 1
-                                setAnalogInput(curInput)
-                                print("Current Input is: ", theInputs[curInput])
+                                setInput(prevInput, curInput, dacAddress)
+                                print("Current Input is: ", list(theInputs.keys())[curInput])
                     if event.type == ecodes.EV_REL:
                         events.put(event)
                         curVol += event.value
@@ -187,12 +214,12 @@ def listenRemote():
                         dbVol = volTable[curVol]
                         pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                         print("Rotary changed the volume to", curVol)
-    except Exception as error:
-        print("Had an IR exception", error)
+#    except Exception as error:
+#        print("Had an IR exception", error)
 
 def cleanup():
     pga2320.close()
-    i2cBus.close()
+#    i2cBus.close()
     IRsignal.close()
     print("I just finished cleaning up!")
     return

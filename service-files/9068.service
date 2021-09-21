@@ -1,13 +1,13 @@
 [Unit]
-Description=Bladelius Control
+Description=Bladelius ES9068 DAC Initialization
  
 [Service]
 Type=simple
 WorkingDirectory=/home/volumio
-ExecStart=/home/volumio/src/Python-3.9.1/bin/python3.9 -u /home/volumio/bladelius/bladelius.py
+ExecStart=/home/volumio/src/Python-3.9.1/bin/python3.9 -u /home/volumio/9068regSet.py -i
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=bladelius
+SyslogIdentifier=oden
 User=volumio
 Group=volumio
  
