@@ -63,13 +63,7 @@ theInputs.update(ast.literal_eval(theProduct['PRODUCT']['theinputs']))
 numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
-""" 
-# Connect to the I2C Bus
-try:
-    i2cBus = SMBus(i2c_port_num)
-except:
-    print("I2C bus problem")
- """
+
 # Open SPI bus instance for PGA2320
 try:
     pga2320 = spidev.SpiDev()
@@ -103,58 +97,28 @@ def get_vol():
     with open( vol, 'r') as f:  #f = open('/home/volumio/bladelius/var/vol', 'r')
         a = int(f.read())
     return a
-""" 
-# PCF8574 Pin States:
-# BAL 1=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=H 0
-# BAL 2=                 D0=H,D1=X,D2=X,D3=X,D4=X,D5=L,D6=H,D7=L 1
-# LINE 1                 D0=X,D1=L,D2=L,D3=L,D4=H,D5=L,D6=L,D7=X 2
-# LINE 2                 D0=X,D1=L,D2=L,D3=H,D4=L,D5=L,D6=L,D7=X 3 
-# LINE 3                 D0=X,D1=L,D2=H,D3=L,D4=L,D5=L,D6=L,D7=X 4
-# LINE 4                 D0=X,D1=H,D2=L,D3=L,D4=L,D5=L,D6=L,D7=X 5
-# LINE 5 (TAPE)(LOOP)    D0=X,D1=L,D2=L,D3=L,D4=L,D5=H,D6=L,D7=X 6
-# DIG/PHONO              D0=L,D1=L,D2=L,D3=L,D4=L,D5=H,D6=H,D7=H 7
 
-def bal1(): #0xC1 / 0b1100 0001
-    i2cBus.write_byte(pcf_address, 0b11000001)
-def bal2(): #0x41 / 0b0100 0001
-    i2cBus.write_byte(pcf_address, 0b01000001)
-def line1(): #0x11 / 0b0001 0001
-    i2cBus.write_byte(pcf_address, 0b00010001)
-def line2(): #0x09 / 0b0000 1001
-    i2cBus.write_byte(pcf_address, 0b00001001)
-def line3(): #0x05 / 0b0000 0101
-    i2cBus.write_byte(pcf_address, 0b00000101)
-def line4(): #0x03 / 0b0000 0011
-    i2cBus.write_byte(pcf_address, 0b00000011)
-def line5(): #0x21 / 0b0010 0001
-    i2cBus.write_byte(pcf_address, 0b00100001)
-def digital(): #0xC0 / 0b1100 0000
-    i2cBus.write_byte(pcf_address, 0b11000000)
+def createBits(theInput, pcfAddress):
+    bitsToSet   = list(theInputs.values())[theInput][1]
+    bitsToClear = list(theInputs.values())[theInput][2]
+    with SMBus(1) as i2cBus:
+        currentBits = i2cBus.read_byte(pcfAddress)
+    pcfBits = (currentBits | bitsToSet) & ~bitsToClear
 
-switcherDigital = { 
-    0: bal1,
-    1: bal2,
-    2: line1,
-    3: line2,
-    4: line3,
-    5: line4,
-    6: line5,
-    7: digital
-}
-
-def setAnalogInput(theInput):
-    func = switcherDigital.get(theInput, "whoops")
-    return func()
- """
 
 def setInput(prevInput, theInput, dacAddress):
     pcfAddress = list(theInputs.values())[theInput][0]
-    pcfBits = list(theInputs.values())[theInput][1]
-    last9068state = list(theInputs.values())[prevInput][2]
-    cur9068state = list(theInputs.values())[theInput][2]
+    #pcfBits = list(theInputs.values())[theInput][1]
+    bitsToSet = list(theInputs.values())[theInput][1]
+    bitsToClear = list(theInputs.values())[theInput][2]
+    with SMBus(i2c_port_num) as i2cBus:
+        currentBits = i2cBus.read_byte(pcfAddress)
+    pcfBits = (currentBits | bitsToSet) & ~bitsToClear
+    last9068state = list(theInputs.values())[prevInput][3]
+    cur9068state = list(theInputs.values())[theInput][3]
     print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
     print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
-    with SMBus(1) as i2cBus:
+    with SMBus(i2c_port_num) as i2cBus:
         i2cBus.write_byte(pcfAddress, pcfBits)
         if last9068state != cur9068state:
             if cur9068state == 'I2S':

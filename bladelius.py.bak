@@ -1223,8 +1223,7 @@ while True:
     if not bladelius.events.empty():
         event = bladelius.events.get_nowait()
         if bladelius.curInput != selectedInput:
-#            if bladelius.curInput == 7:
-            if list(bladelius.theInputs.keys())[bladelius.curInput] == 'STREAM':
+            if bladelius.curInput == 7:
                 volumioIO.emit('getState', '', onPushState)
                 SetState(STATE_PLAYER)
                 print("curInput is volumio", oled.state, newStatus)

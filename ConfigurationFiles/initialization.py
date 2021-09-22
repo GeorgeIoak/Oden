@@ -16,6 +16,7 @@ isDigital = False
 isPhono = False
 whatDoWeHave = []
 theInputs = {}
+theOutputs = {}
 
 setupFile = '/home/volumio/bladelius/ConfigurationFiles/setup.ini'
 configFile = '/home/volumio/bladelius/ConfigurationFiles/config.ini'
@@ -99,10 +100,22 @@ if any(item in i2cDevices for item in digitalBoard):
 for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))
     theInputs.update(ast.literal_eval(options[i]['inputarray']))
+    theOutputs.update(ast.literal_eval(options[i]['outputarray']))
 numInputs = len(theInputs) - 1  # Used for loops
+numOutputs = len(theOutputs) - 1
 
 settings.set('PRODUCT', 'whatdowehave', json.dumps(whatDoWeHave)) # Update what we found list
 settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs dictionary
+settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
+
+# Now set the initial states of the outputs
+'''
+               Power Up   Power Down
+Relay Control      0          1       LOW is Enable Outputs
+Speaker Relay      0          1       LOW is SPEAKERS ON
+Mute               1          0       LOW is MUTE ON
+Bias Control       1          0       LOW is BIAS OFF
+'''
