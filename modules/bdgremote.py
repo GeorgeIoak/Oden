@@ -108,24 +108,23 @@ def createBits(theInput, pcfAddress):
 
 def setInput(prevInput, theInput, dacAddress):
     pcfAddress = list(theInputs.values())[theInput][0]
-    #pcfBits = list(theInputs.values())[theInput][1]
     bitsToSet = list(theInputs.values())[theInput][1]
     bitsToClear = list(theInputs.values())[theInput][2]
     with SMBus(i2c_port_num) as i2cBus:
         currentBits = i2cBus.read_byte(pcfAddress)
-    pcfBits = (currentBits | bitsToSet) & ~bitsToClear
+        pcfBits = (currentBits | bitsToSet) & ~bitsToClear
+        i2cBus.write_byte(pcfAddress, pcfBits)
     last9068state = list(theInputs.values())[prevInput][3]
     cur9068state = list(theInputs.values())[theInput][3]
     print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
     print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
-    with SMBus(i2c_port_num) as i2cBus:
-        i2cBus.write_byte(pcfAddress, pcfBits)
-        if last9068state != cur9068state:
-            if cur9068state == 'I2S':
-                dacValue = 0b10000100  # Setting for Auto DSD/I2S
-            else:
-                dacValue = 0b10000001  # Setting for SPDIF Input ONLY
-#            print("We Would write to %d , Register 28, with %d"%(dacAddress, dacValue))
+    if last9068state != cur9068state:
+        if cur9068state == 'I2S':
+            dacValue = 0b10000100  # Setting for Auto DSD/I2S
+        else:
+            dacValue = 0b10000001  # Setting for SPDIF Input ONLY
+#            print("Write to %d address, Register 28, with %d"%(dacAddress, dacValue))
+        with SMBus(i2c_port_num) as i2cBus:
             i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
 
 def listenRemote():
