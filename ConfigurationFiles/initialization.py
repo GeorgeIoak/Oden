@@ -124,6 +124,8 @@ def changeOutputs(powerUpDown):
             pcfBits |= (1 << theOutputs[i][1])
         with SMBus(i2c_port_num) as i2cBus:
             i2cBus.write_byte(pcfAddress, pcfBits)
+
+changeOutputs(1) # TODO Change for both Power Up AND Down
 '''
 outputArray = { ; I2C Address, BitPosition, PowerUpState
   "Relay Control" : [%(U9)s,  7, 0],
