@@ -110,7 +110,7 @@ def setInput(prevInput, theInput, dacAddress):
     pcfAddress = list(theInputs.values())[theInput][0]
     bitsToSet = list(theInputs.values())[theInput][1]
     bitsToClear = list(theInputs.values())[theInput][2]
-    with SMBus(i2c_port_num) as i2cBus:
+    with SMBus(1) as i2cBus:
         currentBits = i2cBus.read_byte(pcfAddress)
         pcfBits = (currentBits | bitsToSet) & ~bitsToClear
         i2cBus.write_byte(pcfAddress, pcfBits)
@@ -123,9 +123,9 @@ def setInput(prevInput, theInput, dacAddress):
             dacValue = 0b10000100  # Setting for Auto DSD/I2S
         else:
             dacValue = 0b10000001  # Setting for SPDIF Input ONLY
-#            print("Write to %d address, Register 28, with %d"%(dacAddress, dacValue))
-        with SMBus(i2c_port_num) as i2cBus:
+        with SMBus(1) as i2cBus:
             i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
+            print("Write to %d address, Register 28, with %d" %(dacAddress, dacValue))
 
 def listenRemote():
 #    try:
