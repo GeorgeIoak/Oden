@@ -125,8 +125,8 @@ def setInput(prevInput, theInput, dacAddress):
                 dacValue = 0b10000100  # Setting for Auto DSD/I2S
             else:
                 dacValue = 0b10000001  # Setting for SPDIF Input ONLY
-            print("We Would write to %d , Register 28, with %d"%(dacAddress, dacValue))
-#            i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
+#            print("We Would write to %d , Register 28, with %d"%(dacAddress, dacValue))
+            i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
 
 def listenRemote():
 #    try:
