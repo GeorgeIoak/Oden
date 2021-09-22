@@ -112,10 +112,23 @@ with open(setupFile, 'w') as theFile:
     settings.write(theFile)
 
 # Now set the initial states of the outputs
+
+def changeOutputs(powerUpDown):
+    for i in theOutputs.keys():
+        pcfAddress = theOutputs[i][0]
+        with SMBus(i2c_port_num) as i2cBus:
+            pcfBits = i2cBus.read_byte(pcfAddress)
+        if theOutputs[i][2] == 0:
+            pcfBits &= ~(1<<theOutputs[i][1])
+        elif theOutputs[i][2] == 1:
+            pcfBits |= (1 << theOutputs[i][1])
+        with SMBus(i2c_port_num) as i2cBus:
+            i2cBus.write_byte(pcfAddress, pcfBits)
 '''
-               Power Up   Power Down
-Relay Control      0          1       LOW is Enable Outputs
-Speaker Relay      0          1       LOW is SPEAKERS ON
-Mute               1          0       LOW is MUTE ON
-Bias Control       1          0       LOW is BIAS OFF
+outputArray = { ; I2C Address, BitPosition, PowerUpState
+  "Relay Control" : [%(U9)s,  7, 0],
+  "Speaker Relay" : [%(U9)s,  6, 0],
+  "Mute"          : [%(U9)s,  5, 1],
+  "Bias Control"  : [%(U12)s, 0, 1]
+  }
 '''
