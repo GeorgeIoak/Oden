@@ -986,6 +986,13 @@ def ButtonA_PushEvent(hold_time):
         print('Current Standby State is', bladelius.standbyFlag)
         bladelius.standbyFlag ^= 1
         bladelius.changeOutputs(bladelius.standbyFlag)
+        if bladelius.standbyFlag:
+            oled.dimLevel = 0
+            oled.hide()
+        else:
+            oled.dimLevel = 3
+            oled.show()
+            oled.contrast(dimLevels[oled.dimLevel])
     # if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
     #     print('ButtonA short press event')
     #     if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration != None:

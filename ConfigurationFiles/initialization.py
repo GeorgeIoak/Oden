@@ -124,6 +124,7 @@ def changeOutputs(powerUpDown):
             pcfBits |= (1 << theOutputs[i][1])
         with SMBus(1) as i2cBus:
             i2cBus.write_byte(pcfAddress, pcfBits)
+            print("Changed to", format(pcfBits, '#011_b')[2:11])
 
 changeOutputs(1) # 1 for PowerUp and 0 for PowerDown
 
