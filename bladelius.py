@@ -981,17 +981,21 @@ class ScreenSelectMenu():
 #/_____/\__,_/\__/\__/\____/_/ /_/  /_/  \__,_/_/ /_/\___/\__/_/\____/_/ /_/____/  (_)  
 #                                                                                       	
 def ButtonA_PushEvent(hold_time):
-    if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
+    if hold_time < 2:
         print('ButtonA short press event')
-        if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration != None:
-            if oled.playState == 'play':
-                volumioIO.emit('pause')
-            else:
-                volumioIO.emit('play')
-        if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration == None:
-            volumioIO.emit('stop')
-#            oled.modal.UpdateStandbyInfo()  
-            oled.modal.UpdateStandbyInfo()
+        print('Current Standby State is', bladelius.standbyFlag)
+        bladelius.standbyFlag ^= 1
+        bladelius.changeOutputs(bladelius.standbyFlag)
+    # if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
+    #     print('ButtonA short press event')
+    #     if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration != None:
+    #         if oled.playState == 'play':
+    #             volumioIO.emit('pause')
+    #         else:
+    #             volumioIO.emit('play')
+    #     if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration == None:
+    #         volumioIO.emit('stop')
+    #         oled.modal.UpdateStandbyInfo()
 
 def ButtonB_PushEvent(hold_time):
     if hold_time < 2:
@@ -1223,7 +1227,6 @@ while True:
     if not bladelius.events.empty():
         event = bladelius.events.get_nowait()
         if bladelius.curInput != selectedInput:
-#            if bladelius.curInput == 7:
             if list(bladelius.theInputs.keys())[bladelius.curInput] == 'STREAM':
                 volumioIO.emit('getState', '', onPushState)
                 SetState(STATE_PLAYER)

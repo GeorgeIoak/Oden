@@ -116,16 +116,17 @@ with open(setupFile, 'w') as theFile:
 def changeOutputs(powerUpDown):
     for i in theOutputs.keys():
         pcfAddress = theOutputs[i][0]
-        with SMBus(i2c_port_num) as i2cBus:
+        with SMBus(1) as i2cBus:
             pcfBits = i2cBus.read_byte(pcfAddress)
-        if theOutputs[i][2] == 0:
+        if ((theOutputs[i][2]) ^ powerUpDown) == 0:
             pcfBits &= ~(1<<theOutputs[i][1])
-        elif theOutputs[i][2] == 1:
+        elif ((theOutputs[i][2]) ^ powerUpDown) == 1:
             pcfBits |= (1 << theOutputs[i][1])
-        with SMBus(i2c_port_num) as i2cBus:
+        with SMBus(1) as i2cBus:
             i2cBus.write_byte(pcfAddress, pcfBits)
 
-changeOutputs(1) # TODO Change for both Power Up AND Down
+changeOutputs(1) # 1 for PowerUp and 0 for PowerDown
+
 '''
 outputArray = { ; I2C Address, BitPosition, PowerUpState
   "Relay Control" : [%(U9)s,  7, 0],

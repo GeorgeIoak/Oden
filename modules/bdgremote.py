@@ -2,6 +2,7 @@
 #coding: utf8
 # TODO Change this to a class (?) 
 
+from ConfigurationFiles.initialization import changeOutputs as changeOutputs
 import os
 import sys
 import spidev
@@ -53,6 +54,9 @@ isDigital = False
 isPhono = False
 whatDoWeHave = []
 theInputs = {}
+theOutputs = {}
+
+standbyFlag = 1  # Power up initialization turns things ON
 
 # initialization.py needs to run first to modify setup.ini properly
 setupFile = '/home/volumio/bladelius/ConfigurationFiles/setup.ini'
@@ -60,6 +64,7 @@ theProduct = ConfigParser(inline_comment_prefixes=(
     ';',), interpolation=BasicInterpolation())
 theProduct.read(setupFile)  # File used to get product settings
 theInputs.update(ast.literal_eval(theProduct['PRODUCT']['theinputs']))
+theOutputs.update(ast.literal_eval(theProduct['PRODUCT']['theoutputs']))
 numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
@@ -72,7 +77,7 @@ try:
 except:
     print("Could not connect to SPI1 bus")
 
-global events # Testing global to see if it will pass back to oden.py
+global events # Testing global to see if it will pass back to bladelius.py
 selector = selectors.DefaultSelector()
 try:
     IRsignal = InputDevice('/dev/input/by-path/platform-ir-receiver@12-event')
@@ -86,11 +91,12 @@ except (FileNotFoundError, PermissionError)as error:
 
 # RAM Drive setup on /var/ram
 # TODO: need to use RAM Drive until shutting down
+# Environmental variables are probably easier
 
 # Write volume to file
 def save_vol(curVol):
     with open( vol, 'w') as f:  #f = open('/home/volumio/bladelius/var/vol', 'w')
-        f.write(str(CurVol))
+        f.write(str(curVol))
 
 # Get volume from file
 def get_vol():
