@@ -2,9 +2,12 @@
 #coding: utf8
 # TODO Change this to a class (?) 
 
-from ConfigurationFiles.initialization import changeOutputs as changeOutputs
 import os
 import sys
+sys.path.insert(0, r'/home/volumio/bladelius')
+from ConfigurationFiles.config import*  # File locations for saving states
+from ConfigurationFiles.initialization import changeOutputs as changeOutputs
+
 import spidev
 from smbus2 import SMBus
 #import config
@@ -15,8 +18,8 @@ from threading import Thread, Event
 import asyncio
 from queue import Queue
 from time import*
-sys.path.insert(0, r'/home/volumio/Oden')
-from ConfigurationFiles.config import*  # File locations for saving states
+
+
 import json
 import ast
 from configparser import ConfigParser, BasicInterpolation
@@ -130,7 +133,7 @@ def setInput(prevInput, theInput, dacAddress):
         else:
             dacValue = 0b10000001  # Setting for SPDIF Input ONLY
         with SMBus(1) as i2cBus:
-            i2cBus.write_byte(dacAddress, 28, dacValue)  # Register 28 is Input Select
+            i2cBus.write_byte_data(dacAddress, 28, dacValue)  # Register 28 is Input Select
             print("Write to %d address, Register 28, with %d" %(dacAddress, dacValue))
 
 def listenRemote():

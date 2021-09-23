@@ -981,28 +981,15 @@ class ScreenSelectMenu():
 #/_____/\__,_/\__/\__/\____/_/ /_/  /_/  \__,_/_/ /_/\___/\__/_/\____/_/ /_/____/  (_)  
 #                                                                                       	
 def ButtonA_PushEvent(hold_time):
-    if hold_time < 2:
-        print('ButtonA short press event')
-        print('Current Standby State is', bladelius.standbyFlag)
-        bladelius.standbyFlag ^= 1
-        bladelius.changeOutputs(bladelius.standbyFlag)
-        if bladelius.standbyFlag:
-            oled.dimLevel = 0
-            oled.hide()
-        else:
-            oled.dimLevel = 3
-            oled.show()
-            oled.contrast(dimLevels[oled.dimLevel])
-    # if hold_time < 2 and oled.state != STATE_LIBRARY_INFO:
-    #     print('ButtonA short press event')
-    #     if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration != None:
-    #         if oled.playState == 'play':
-    #             volumioIO.emit('pause')
-    #         else:
-    #             volumioIO.emit('play')
-    #     if oled.state == STATE_PLAYER and oled.playState != 'stop' and oled.duration == None:
-    #         volumioIO.emit('stop')
-    #         oled.modal.UpdateStandbyInfo()
+    oled.dimLevel += 1
+    if oled.dimLevel == 4:
+        oled.dimLevel = 0
+        oled.hide()
+    if oled.dimLevel == 1:
+        oled.show()
+    oled.contrast(dimLevels[oled.dimLevel])
+    print('ButtonA short press event', oled.dimLevel)
+
 
 def ButtonB_PushEvent(hold_time):
     if hold_time < 2:
@@ -1020,14 +1007,19 @@ def ButtonC_PushEvent(hold_time):
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
 def ButtonD_PushEvent(hold_time):
-    oled.dimLevel += 1
-    if oled.dimLevel == 4:
-        oled.dimLevel = 0
-        oled.hide()
-    if oled.dimLevel == 1:
-        oled.show()
-    oled.contrast(dimLevels[oled.dimLevel])
-    print('ButtonD short press event', oled.dimLevel)
+    if hold_time < 2:
+        print('ButtonD short press event')
+        print('Current Standby State is', bladelius.standbyFlag)
+        bladelius.standbyFlag ^= 1
+        bladelius.changeOutputs(bladelius.standbyFlag)
+        if bladelius.standbyFlag:
+            oled.dimLevel = 0
+            oled.hide()
+        else:
+            oled.dimLevel = 3
+            oled.show()
+            oled.contrast(dimLevels[oled.dimLevel])
+
 
 def RightKnob_RotaryEvent(dir):
     global emit_track
