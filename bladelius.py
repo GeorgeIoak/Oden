@@ -828,7 +828,7 @@ class NowPlayingScreen():
 #_____________________________________________________________________________________________________________
         elif oled.playState == 'stop':
             self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-            self.draw.text((oledtext03), oled.time, font=fontClock, fill='white')
+            #self.draw.text((oledtext03), oled.time, font=fontClock, fill='white')
             self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
             self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
             self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
