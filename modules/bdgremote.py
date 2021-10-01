@@ -58,6 +58,7 @@ isPhono = False
 whatDoWeHave = []
 theInputs = {}
 theOutputs = {}
+theBoards ={}
 
 standbyFlag = 1  # Power up initialization turns things ON
 
@@ -68,6 +69,7 @@ theProduct = ConfigParser(inline_comment_prefixes=(
 theProduct.read(setupFile)  # File used to get product settings
 theInputs.update(ast.literal_eval(theProduct['PRODUCT']['theinputs']))
 theOutputs.update(ast.literal_eval(theProduct['PRODUCT']['theoutputs']))
+theBoards.update(ast.literal_eval(theProduct['PRODUCT']['boardSwitch']))
 numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
@@ -123,23 +125,38 @@ def setInput(prevInput, theInput, dacAddress):
         currentBits = i2cBus.read_byte(pcfAddress)
         pcfBits = (currentBits | bitsToSet) & ~bitsToClear
         i2cBus.write_byte(pcfAddress, pcfBits)
+        pcfState = format(pcfBits, '#011_b')[2:11]
+        print("PCF8574 with address of %s was sent this: %s" %
+              (pcfAddress, pcfState))
     last9068state = list(theInputs.values())[prevInput][3]
     cur9068state = list(theInputs.values())[theInput][3]
+    lastInputBoard = list(theInputs.values())[prevInput][4]
+    curInputBoard = list(theInputs.values())[theInput][4]
     print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
     print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
-    if last9068state != cur9068state:
+    if cur9068state != last9068state:
         if cur9068state == 'I2S':
-            dacValue = 0b10000100  # Setting for Auto DSD/I2S
+            inputSelect = 0b10000100  # Setting for Auto DSD/I2S
+            syncMode =    0b00000100  # Enable Sync Mode for I2S
         else:
-            dacValue = 0b10000001  # Setting for SPDIF Input ONLY
+            inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
+            syncMode =    0b00000100  # Disable Sync Mode for SPDIF
         with SMBus(1) as i2cBus:
-            i2cBus.write_byte_data(dacAddress, 28, dacValue)  # Register 28 is Input Select
-            print("Write to %d address, Register 28, with %d" %(dacAddress, dacValue))
+            i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
+            i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+            #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
+    if curInputBoard != lastInputBoard:
+        if curInputBoard == 'A':
+            pass
+        elif curInputBoard == 'D':
+            pass
+        elif curInputBoard == 'P':
+            pass
 
 def listenRemote():
 #    try:
         while True:
-            global curVol, prevInput, curInput  # Needs to be global so values can be passed back to oden.py
+            global curVol, prevInput, curInput  # Needs to be global so values can be passed back to bladelius.py
             for key, mask in selector.select():
                 device = key.fileobj
                 for event in device.read():

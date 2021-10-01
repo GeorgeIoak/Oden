@@ -7,7 +7,7 @@ WorkingDirectory=/home/volumio
 ExecStart=/home/volumio/src/Python-3.9.1/bin/python3.9 -u /home/volumio/9068regSet.py -i
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=oden
+SyslogIdentifier=ES9068
 User=volumio
 Group=volumio
  

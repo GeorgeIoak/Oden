@@ -17,6 +17,7 @@ isPhono = False
 whatDoWeHave = []
 theInputs = {}
 theOutputs = {}
+selectBoards = {}
 
 setupFile = '/home/volumio/bladelius/ConfigurationFiles/setup.ini'
 configFile = '/home/volumio/bladelius/ConfigurationFiles/config.ini'
@@ -64,7 +65,7 @@ def init9068(dacAddress):
                37: 0b00000000,
                57: 0b00000001,
                57: 0b00000000,
-#               66: 0b00000100,  # set to syncronous mode so DSD512 works
+               66: 0b00000100,  # set to syncronous mode so DSD512 works
                67: 0b11111111,
                77: 0b00000000,
               127: 0b00110000}
@@ -82,7 +83,7 @@ dacAddress = int(options['DAC']['dacaddress'], 16)
 if set(tyr) <= set(i2cDevices):
     isTyr = True
     isOden = False
-    whatDoWeHave.append("TYR") 
+    whatDoWeHave.append("TYR")
 elif set(oden) <= set(i2cDevices):
     isTyr = False
     isOden = True
@@ -101,12 +102,15 @@ for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))
     theInputs.update(ast.literal_eval(options[i]['inputarray']))
     theOutputs.update(ast.literal_eval(options[i]['outputarray']))
+    selectBoards.update(ast.literal_eval(options[i]['selectBoard']))
 numInputs = len(theInputs) - 1  # Used for loops
 numOutputs = len(theOutputs) - 1
 
 settings.set('PRODUCT', 'whatdowehave', json.dumps(whatDoWeHave)) # Update what we found list
 settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs dictionary
 settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
+settings.set('PRODUCT', 'selectBoards', json.dumps(
+    selectBoards))  # Update the settings to change input board
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
