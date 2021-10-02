@@ -1234,7 +1234,7 @@ while True:
             else: # TODO Only need to change state once
                 SetState(STATE_OTHER_INPUT)
             #print("the event is", event)
-            print("End of the loop and curVol is", bladelius.curVol)
+            #print("End of the loop and curVol is", bladelius.curVol)
             selectedInput = bladelius.curInput
 
 sleep(0.02)

@@ -69,7 +69,7 @@ theProduct = ConfigParser(inline_comment_prefixes=(
 theProduct.read(setupFile)  # File used to get product settings
 theInputs.update(ast.literal_eval(theProduct['PRODUCT']['theinputs']))
 theOutputs.update(ast.literal_eval(theProduct['PRODUCT']['theoutputs']))
-theBoards.update(ast.literal_eval(theProduct['PRODUCT']['boardSwitch']))
+theBoards.update(ast.literal_eval(theProduct['PRODUCT']['dacphonoboards']))
 numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)

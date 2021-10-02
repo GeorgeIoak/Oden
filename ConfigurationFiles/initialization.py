@@ -102,14 +102,14 @@ for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))
     theInputs.update(ast.literal_eval(options[i]['inputarray']))
     theOutputs.update(ast.literal_eval(options[i]['outputarray']))
-    selectBoards.update(ast.literal_eval(options[i]['selectBoard']))
+    selectBoards.update(ast.literal_eval(options[i]['dacPhonoBoard']))
 numInputs = len(theInputs) - 1  # Used for loops
 numOutputs = len(theOutputs) - 1
 
 settings.set('PRODUCT', 'whatdowehave', json.dumps(whatDoWeHave)) # Update what we found list
 settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs dictionary
 settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
-settings.set('PRODUCT', 'selectBoards', json.dumps(
+settings.set('PRODUCT', 'dacPhonoBoards', json.dumps(
     selectBoards))  # Update the settings to change input board
 
 with open(setupFile, 'w') as theFile:

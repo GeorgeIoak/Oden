@@ -2,7 +2,7 @@
 
 #___________________________________________________________________
 #config for boot- and shutdown-logo
-oledBootLogo = "StartScreen1322_Bladelius.bmp"
+oledBootLogo = "bdg-logo-invert.png"
 oledShutdownLogo = "ShutdownScreen1322.bmp"
 
 #___________________________________________________________________
