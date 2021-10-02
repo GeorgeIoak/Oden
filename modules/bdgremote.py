@@ -127,7 +127,7 @@ def setInput(prevInput, theInput, dacAddress):
         i2cBus.write_byte(pcfAddress, pcfBits)
         pcfState = format(pcfBits, '#011_b')[2:11]
         print("PCF8574 with address of %s was sent this: %s" %
-              (pcfAddress, pcfState))
+              (hex(pcfAddress), pcfState))
     last9068state = list(theInputs.values())[prevInput][3]
     cur9068state = list(theInputs.values())[theInput][3]
     lastInputBoard = list(theInputs.values())[prevInput][4]
@@ -140,18 +140,24 @@ def setInput(prevInput, theInput, dacAddress):
             syncMode =    0b00000100  # Enable Sync Mode for I2S
         else:
             inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
-            syncMode =    0b00000100  # Disable Sync Mode for SPDIF
+            syncMode =    0b00000000  # Disable Sync Mode for SPDIF
         with SMBus(1) as i2cBus:
             i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
             i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
             #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
     if curInputBoard != lastInputBoard:
-        if curInputBoard == 'A':
-            pass
-        elif curInputBoard == 'D':
-            pass
-        elif curInputBoard == 'P':
-            pass
+        pcfAddress = list(theBoards.values())[0][0]
+        bitsToSet = list(theBoards.values())[0][1]
+        bitsToClear = list(theBoards.values())[0][2]
+        with SMBus(1) as i2cBus:
+            currentBits = i2cBus.read_byte(pcfAddress)
+        pcfBits = (currentBits | bitsToSet) & ~bitsToClear
+        if curInputBoard != 'A':
+            with SMBus(1) as i2cBus:
+                i2cBus.write_byte(pcfAddress, pcfBits)
+                pcfState = format(pcfBits, '#011_b')[2:11]
+                print("PCF8574 with address of %s was sent this: %s" %
+                    (hex(pcfAddress), pcfState))
 
 def listenRemote():
 #    try:
