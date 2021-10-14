@@ -218,6 +218,7 @@ labelfontfa2 = load_font('fa-solid-900.ttf', 14)
 fontClock = load_font('DSG.ttf', 30)                           #used for clock
 fontDate = load_font('Oxanium-Light.ttf', 12)           #used for Date 'DSEG7Classic-Regular.ttf'
 fontIP = load_font('Oxanium-Light.ttf', 12)             #used for IP 'DSEG7Classic-Regular.ttf'
+fontSource = load_font('NotoSans-Bold.ttf', 32)         # used for displaying the current source input
 #above are the "imports" for the fonts. 
 #After the name of the font comes a number, this defines the Size (height) of the letters. 
 #Just put .ttf file in the 'Volumio-OledUI/fonts' directory and make an import like above. 
@@ -873,8 +874,8 @@ class OtherInputScreen():
 
     def DrawOn(self, image):
         self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-        self.draw.text((10, 4), list(bladelius.theInputs.keys())[bladelius.curInput], font=fontClock, fill='white')
-        self.draw.text((175, 4), str(bladelius.curVol), font=fontClock, fill='white')
+        self.draw.text((10, 4), list(bladelius.theInputs.keys())[bladelius.curInput], font=fontSource, fill='white')
+        self.draw.text((175, 4), str(bladelius.curVol), font=fontSource, fill='white')
         self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
         self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
         self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')

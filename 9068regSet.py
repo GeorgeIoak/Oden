@@ -5,9 +5,9 @@ import argparse
 from smbus2 import SMBus
 
 i2cAddr = 0x48
-theregs = [4, 6, 8, 24, 25, 26, 28, 30, 31, 32, 36, 37,
-           41, 57, 66, 67, 77, 122, 123, 124, 125,
-           126, 127]
+theregs = [4, 6, 7, 8, 24, 25, 26, 28, 29, 30, 31, 
+           32, 33, 36, 37, 41, 57, 66, 67, 77, 122, 
+           123, 124, 125, 126, 127]
 
 def check_value(value):
     try:
@@ -36,11 +36,15 @@ def check_reg(reg):
 
 def init9068():
     theregs = { 6: 0b11110001,
+                7: 0b11000000,
                 8: 0b00000101,
                26: 0b00000001,
                24: 0b10000011,
                28: 0b10001100, # bits 5:4 are format, 00 is I2S, 01 is LJ
+               29: 0b01100000,  # Configure GPIO4 as an SPDIF Input
+               31: 0b11000000,  # secret settings to get MQA working
                32: 0b10000000,
+               33: 0b00000001,  # secret settings to get MQA working
                36: 0b00000000,
                37: 0b00000000,
                57: 0b00000001,
