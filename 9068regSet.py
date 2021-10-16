@@ -34,48 +34,48 @@ def check_reg(reg):
         raise argparse.ArgumentTypeError("%s is out of range, Valid Register Numbers are 0 - 254" % ireg)
     return ireg
 
-    theregs = { 6: 0b11110001,
-                7: 0b11000000,
-                8: 0b00000101,
-               26: 0b00000001,
-               24: 0b10000011,
-               28: 0b10001100, # bits 5:4 are format, 00 is I2S, 01 is LJ
-               29: 0b01100000,  # Configure GPIO4 as an SPDIF Input
-               31: 0b11000000,  # secret settings to get MQA working
-               32: 0b10000000,
-               33: 0b00000001,  # secret settings to get MQA working
-               36: 0b00000000,
-               37: 0b00000000,
-               57: 0b00000001,
-               57: 0b00000000,
-               67: 0b11111111,
-               77: 0b00000000,
-              127: 0b00110000}
-    theregs = {
-                 6: 0b11110001,  #
-                 7: 0b11000000,  #
-                 8: 0b00000101,  #
-                 9: 0b00000101,  #
-                26: 0b00000001,  #
-                24: 0b10000011,  #
-                28: 0b10001100,  # Input Select Registers	Full Auto Select
-                30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
-                31: 0b11000000,  # Secret MQA Register
-                32: 0b10000000,  # MQA Enable
-                33: 0b00000001,  # Reserved	Changing fixed MQA Status
-                41: 0b11101100,  # Volume Control Options
-                41: 0b11101100,  # Volume Control Options
-                42: 0b10101010,  # Automute Time
-                43: 0b11111111,  # Automute Level
-                44: 0b00000101,  # Automute Configuration
-                52: 0b00000110,  # Filter Settings
-                57: 0b00000000,  # THD+IIR
-                60: 0b10100110,  # DAC THD Compensation C3
-                61: 0b11111111,  # DAC THD Compensation C3
-                67: 0b01011010,  # ASRC/DPLL Bandwidth not documented
-                75: 0b00000111,  # NSMOD Configuration 1  [4:0] Reserved
-                76: 0b00000000,  # NSMOD Configuration 2
-    }
+theregs = { 6: 0b11110001,
+            7: 0b11000000,
+            8: 0b00000101,
+            26: 0b00000001,
+            24: 0b10000011,
+            28: 0b10001100, # bits 5:4 are format, 00 is I2S, 01 is LJ
+            29: 0b01100000,  # Configure GPIO4 as an SPDIF Input
+            31: 0b11000000,  # secret settings to get MQA working
+            32: 0b10000000,
+            33: 0b00000001,  # secret settings to get MQA working
+            36: 0b00000000,
+            37: 0b00000000,
+            57: 0b00000001,
+            57: 0b00000000,
+            67: 0b11111111,
+            77: 0b00000000,
+            127: 0b00110000}
+theregs = {
+                6: 0b11110001,  #
+                7: 0b11000000,  #
+                8: 0b00000101,  #
+                9: 0b00000101,  #
+            26: 0b00000001,  #
+            24: 0b10000011,  #
+            28: 0b10001100,  # Input Select Registers	Full Auto Select
+            30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
+            31: 0b11000000,  # Secret MQA Register
+            32: 0b10000000,  # MQA Enable
+            33: 0b00000001,  # Reserved	Changing fixed MQA Status
+            41: 0b11101100,  # Volume Control Options
+            41: 0b11101100,  # Volume Control Options
+            42: 0b10101010,  # Automute Time
+            43: 0b11111111,  # Automute Level
+            44: 0b00000101,  # Automute Configuration
+            52: 0b00000110,  # Filter Settings
+            57: 0b00000000,  # THD+IIR
+            60: 0b10100110,  # DAC THD Compensation C3
+            61: 0b11111111,  # DAC THD Compensation C3
+            67: 0b01011010,  # ASRC/DPLL Bandwidth not documented
+            75: 0b00000111,  # NSMOD Configuration 1  [4:0] Reserved
+            76: 0b00000000,  # NSMOD Configuration 2
+}
 
 
 def init9068():
