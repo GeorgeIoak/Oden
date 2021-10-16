@@ -74,6 +74,8 @@ def init9068(dacAddress):
                  7: 0b11000000,  #
                  8: 0b00000101,  #
                  9: 0b00000101,  # 
+                26: 0b00000001,
+                24: 0b10000011,
                 28: 0b10001100,  # Input Select Registers	Full Auto Select
                 30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
                 31: 0b11000000,  # Secret MQA Register
