@@ -5,9 +5,9 @@ import argparse
 from smbus2 import SMBus
 
 i2cAddr = 0x48
-theregs = [4, 6, 7, 8, 24, 25, 26, 28, 29, 30, 31, 
-           32, 33, 36, 37, 41, 57, 66, 67, 77, 122, 
-           123, 124, 125, 126, 127]
+# theregs = [6, 7, 8, 9, 24, 26, 28, 30, 31, 
+#            32, 33, 36, 37, 41, 57, 66, 67, 77, 122, 
+#            123, 124, 125, 126, 127]
 
 def check_value(value):
     try:
@@ -82,15 +82,15 @@ def init9068():
         register = format(bus.read_byte_data(i2cAddr, reg), '#011_b')[2:11]
         print("Register %s is: %s"%(reg, register))
     # Initialize PCF8574 U9 to set D4 bit
-    try:
-        bus.write_byte(0x20, 0x00) # Set PCF8574A to all outputs
-    except OSError as e:
-        print("Got", e, "error for address 0x20, is the board connected?")
-        pass
-    else:
-        bus.write_byte(0x20, 0b00010000)
-        pcf8574 = format(bus.read_byte(0x20), '#011_b')[2:11]
-        print("PCF8574 U9 was set to: %s"%(pcf8574))
+    # try:
+    #     bus.write_byte(0x20, 0x00) # Set PCF8574A to all outputs
+    # except OSError as e:
+    #     print("Got", e, "error for address 0x20, is the board connected?")
+    #     pass
+    # else:
+    #     bus.write_byte(0x20, 0b00010000)
+    #     pcf8574 = format(bus.read_byte(0x20), '#011_b')[2:11]
+    #     print("PCF8574 U9 was set to: %s"%(pcf8574))
 
 
 parser = argparse.ArgumentParser(description='Tool to Read and Set ES9068 Registers')
@@ -127,6 +127,6 @@ with SMBus(bus=1, force=True) as bus:
     elif args.i:
         init9068()
     else:
-        for r in theregs:
+        for r in theregs.keys():
             register = format(bus.read_byte_data(i2cAddr, r), '#011_b')[2:11]
             print(f'Register {r:3} is: {register}')
