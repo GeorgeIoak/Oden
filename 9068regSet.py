@@ -34,7 +34,6 @@ def check_reg(reg):
         raise argparse.ArgumentTypeError("%s is out of range, Valid Register Numbers are 0 - 254" % ireg)
     return ireg
 
-def init9068():
     theregs = { 6: 0b11110001,
                 7: 0b11000000,
                 8: 0b00000101,
@@ -77,6 +76,9 @@ def init9068():
                 75: 0b00000111,  # NSMOD Configuration 1  [4:0] Reserved
                 76: 0b00000000,  # NSMOD Configuration 2
     }
+
+
+def init9068():
     for reg,value in theregs.items():
         bus.write_byte_data(i2cAddr, reg, value)
         register = format(bus.read_byte_data(i2cAddr, reg), '#011_b')[2:11]
