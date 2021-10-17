@@ -70,12 +70,11 @@ def init9068(dacAddress):
                77: 0b00000000,
               127: 0b00110000}
     theregs = {
-                 6: 0b11110001,  # 
-                 7: 0b11000000,  #
-                 8: 0b00000101,  #
-                 9: 0b00000101,  # 
-                26: 0b00000001,
-                24: 0b10000011,
+                 6: 0b11110001,  # GPIO2: Set output high, GPIO1 lock status
+                 7: 0b11000000,  # GPIO4: Set to PDM Data 2 Input
+                 8: 0b00000101,  # GPIO5: is signal MQA
+                26: 0b00000001,  # APDB, analog ref is enabled
+                24: 0b10000011,  # AREG_PDB analog reg enabled, DAC supply is 2.8V
                 28: 0b10001100,  # Input Select Registers	Full Auto Select
                 30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
                 31: 0b11000000,  # Secret MQA Register
