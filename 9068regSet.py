@@ -52,10 +52,11 @@ theregs = { 6: 0b11110001,
             77: 0b00000000,
             127: 0b00110000}
 theregs = {
+             4: 0b10000000,  # Set DAC CLK to ACLK1
              6: 0b11110001,  #
              7: 0b11000000,  #
              8: 0b00000101,  #
-            26: 0b00000001,  #
+            26: 0b00010001,  # Low noise for AREF, Enable AREF
             24: 0b10000011,  #
             28: 0b10001100,  # Input Select Registers	Full Auto Select
             30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
