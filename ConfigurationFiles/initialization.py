@@ -74,12 +74,14 @@ def init9068(dacAddress):
                  6: 0b11110001,  # GPIO2: Set output high, GPIO1 lock status
                  7: 0b11000000,  # GPIO4: Set to PDM Data 2 Input
                  8: 0b00000101,  # GPIO5: is signal MQA
-                26: 0b00010001,  # Low noise for AREF, Enable AREF
-                24: 0b10000011,  # AREG_PDB analog reg enabled, DAC supply is 2.8V
+#                26: 0b00010001,  # Low noise for AREF, Enable AREF
+#                24: 0b10000011,  # AREG_PDB analog reg enabled, DAC supply is 2.8V
                 28: 0b10001100,  # Input Select Registers	Full Auto Select
                 30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
                 31: 0b11000000,  # Secret MQA Register
                 32: 0b10000000,  # MQA Enable
+                36: 0b00000000,  # Set DAC Volume 1 to Max
+                37: 0b00000000,  # Set DAC Volume 2 to Max
                 33: 0b00000001,  # Reserved	Changing fixed MQA Status
                 41: 0b11101100,  # Volume Control Options
                 41: 0b11101100,  # Volume Control Options

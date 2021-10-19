@@ -56,13 +56,15 @@ theregs = {
              6: 0b11110001,  #
              7: 0b11000000,  #
              8: 0b00000101,  #
-            26: 0b00010001,  # Low noise for AREF, Enable AREF
-            24: 0b10000011,  #
+#            26: 0b00010001,  # Low noise for AREF, Enable AREF
+#            24: 0b10000011,  #
             28: 0b10001100,  # Input Select Registers	Full Auto Select
             30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
             31: 0b11000000,  # Secret MQA Register
             32: 0b10000000,  # MQA Enable
             33: 0b00000001,  # Reserved	Changing fixed MQA Status
+            36: 0b00000000,  # Set DAC Volume 1 to Max
+            37: 0b00000000,  # Set DAC Volume 2 to Max
             41: 0b11101100,  # Volume Control Options
             41: 0b11101100,  # Volume Control Options
             42: 0b10101010,  # Automute Time
