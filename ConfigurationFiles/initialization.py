@@ -28,6 +28,8 @@ options.read(configFile)  # File used to store product configuration
 settings = ConfigParser(inline_comment_prefixes=(';',), interpolation=BasicInterpolation())
 settings.read(setupFile)  # File used to get product settings
 
+theregs = ast.literal_eval(options['9068-INIT']['theregs'])
+
 # Routine to scan and return a list of I2C Devices on I2C1
 def scan(force=False):
     devices = []
@@ -50,52 +52,7 @@ def scan(force=False):
 
 i2cDevices = scan(force=True)
 
-def init9068(dacAddress):
-    theregs = { 6: 0b11110001,
-                7: 0b11000000,
-                8: 0b00000101,
-               26: 0b00000001,
-               24: 0b10000011,
-               28: 0b10000100,  # bits 5:4 are format, 00 is I2S, 01 is LJ
-               29: 0b01100000,  # Configure GPIO4 as an SPDIF Input
-               31: 0b11000000,  # secret settings to get MQA working
-               32: 0b10000000,
-               33: 0b00000001,  # secret settings to get MQA working
-               36: 0b00000000,
-               37: 0b00000000,
-               57: 0b00000001,
-               57: 0b00000000,
-               66: 0b00000100,  # set to syncronous mode so DSD512 works
-               67: 0b11111111,
-               77: 0b00000000,
-              127: 0b00110000}
-    theregs = {
-                 4: 0b10000000,  # Set DAC CLK to ACLK1
-                 6: 0b11110001,  # GPIO2: Set output high, GPIO1 lock status
-                 7: 0b11000000,  # GPIO4: Set to PDM Data 2 Input
-                 8: 0b00000101,  # GPIO5: is signal MQA
-#                26: 0b00010001,  # Low noise for AREF, Enable AREF
-#                24: 0b10000011,  # AREG_PDB analog reg enabled, DAC supply is 2.8V
-                28: 0b10001100,  # Input Select Registers	Full Auto Select
-                30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
-                31: 0b11000000,  # Secret MQA Register
-                32: 0b10000000,  # MQA Enable
-                36: 0b00000000,  # Set DAC Volume 1 to Max
-                37: 0b00000000,  # Set DAC Volume 2 to Max
-                33: 0b00000001,  # Reserved	Changing fixed MQA Status
-                41: 0b11101100,  # Volume Control Options
-                41: 0b11101100,  # Volume Control Options
-                42: 0b10101010,  # Automute Time
-                43: 0b11111111,  # Automute Level
-                44: 0b00000101,  # Automute Configuration
-                52: 0b00000110,  # Filter Settings
-                57: 0b00000000,  # THD+IIR
-                60: 0b10100110,  # DAC THD Compensation C3
-                61: 0b11111111,  # DAC THD Compensation C3
-                67: 0b01011010,  # ASRC/DPLL Bandwidth not documented
-                75: 0b00000111,  # NSMOD Configuration 1  [4:0] Reserved
-                76: 0b00000000,  # NSMOD Configuration 2
-    }
+def init9068(dacAddress, theregs):
     with SMBus(bus=1, force=True) as bus:
         for reg,value in theregs.items():
             bus.write_byte_data(dacAddress, reg, value)
@@ -119,7 +76,7 @@ elif set(oden) <= set(i2cDevices):
 # Check for the ES9068 DAC Chip
 if (dacAddress in i2cDevices):
     whatDoWeHave.append("DAC")
-    init9068(dacAddress)
+    init9068(dacAddress, theregs)
 
 # Check for a Digital Board
 if any(item in i2cDevices for item in digitalBoard):

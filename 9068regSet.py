@@ -1,13 +1,19 @@
 #!/usr/local/bin/python39
 
 import argparse
+import ast
 
 from smbus2 import SMBus
+from configparser import ConfigParser, BasicInterpolation
 
-i2cAddr = 0x48
-# theregs = [6, 7, 8, 9, 24, 26, 28, 30, 31, 
-#            32, 33, 36, 37, 41, 57, 66, 67, 77, 122, 
-#            123, 124, 125, 126, 127]
+configFile = '/home/volumio/bladelius/ConfigurationFiles/config.ini'
+
+options = ConfigParser(inline_comment_prefixes=(
+    ';',), interpolation=BasicInterpolation())
+options.read(configFile)  # File used to store product configuration
+
+dacAddress = int(options['DAC']['dacaddress'], 16)
+theregs = ast.literal_eval(options['9068-INIT']['theregs'])
 
 def check_value(value):
     try:
@@ -34,68 +40,11 @@ def check_reg(reg):
         raise argparse.ArgumentTypeError("%s is out of range, Valid Register Numbers are 0 - 254" % ireg)
     return ireg
 
-theregs = { 6: 0b11110001,
-            7: 0b11000000,
-            8: 0b00000101,
-            26: 0b00000001,
-            24: 0b10000011,
-            28: 0b10001100, # bits 5:4 are format, 00 is I2S, 01 is LJ
-            29: 0b01100000,  # Configure GPIO4 as an SPDIF Input
-            31: 0b11000000,  # secret settings to get MQA working
-            32: 0b10000000,
-            33: 0b00000001,  # secret settings to get MQA working
-            36: 0b00000000,
-            37: 0b00000000,
-            57: 0b00000001,
-            57: 0b00000000,
-            67: 0b11111111,
-            77: 0b00000000,
-            127: 0b00110000}
-theregs = {
-             4: 0b10000000,  # Set DAC CLK to ACLK1
-             6: 0b11110001,  #
-             7: 0b11000000,  #
-             8: 0b00000101,  #
-#            26: 0b00010001,  # Low noise for AREF, Enable AREF
-#            24: 0b10000011,  #
-            28: 0b10001100,  # Input Select Registers	Full Auto Select
-            30: 0b00010000,  # DSD & DOP Operation + DAC Mix Select
-            31: 0b11000000,  # Secret MQA Register
-            32: 0b10000000,  # MQA Enable
-            33: 0b00000001,  # Reserved	Changing fixed MQA Status
-            36: 0b00000000,  # Set DAC Volume 1 to Max
-            37: 0b00000000,  # Set DAC Volume 2 to Max
-            41: 0b11101100,  # Volume Control Options
-            41: 0b11101100,  # Volume Control Options
-            42: 0b10101010,  # Automute Time
-            43: 0b11111111,  # Automute Level
-            44: 0b00000101,  # Automute Configuration
-            52: 0b00000110,  # Filter Settings
-            57: 0b00000000,  # THD+IIR
-            60: 0b10100110,  # DAC THD Compensation C3
-            61: 0b11111111,  # DAC THD Compensation C3
-            67: 0b01011010,  # ASRC/DPLL Bandwidth not documented
-            75: 0b00000111,  # NSMOD Configuration 1  [4:0] Reserved
-            76: 0b00000000,  # NSMOD Configuration 2
-}
-
-
 def init9068():
     for reg,value in theregs.items():
-        bus.write_byte_data(i2cAddr, reg, value)
-        register = format(bus.read_byte_data(i2cAddr, reg), '#011_b')[2:11]
+        bus.write_byte_data(dacAddress, reg, value)
+        register = format(bus.read_byte_data(dacAddress, reg), '#011_b')[2:11]
         print("Register %s is: %s"%(reg, register))
-    # Initialize PCF8574 U9 to set D4 bit
-    # try:
-    #     bus.write_byte(0x20, 0x00) # Set PCF8574A to all outputs
-    # except OSError as e:
-    #     print("Got", e, "error for address 0x20, is the board connected?")
-    #     pass
-    # else:
-    #     bus.write_byte(0x20, 0b00010000)
-    #     pcf8574 = format(bus.read_byte(0x20), '#011_b')[2:11]
-    #     print("PCF8574 U9 was set to: %s"%(pcf8574))
-
 
 parser = argparse.ArgumentParser(description='Tool to Read and Set ES9068 Registers')
 
@@ -117,11 +66,11 @@ args = parser.parse_args()
 #print(args)
 
 def setReg(reg, value):
-    register = format(bus.read_byte_data(i2cAddr, reg), '#011_b')[2:11]
+    register = format(bus.read_byte_data(dacAddress, reg), '#011_b')[2:11]
     print("Register %s is: %s"%(reg, register))
     if value is not None:
-        bus.write_byte_data(i2cAddr, reg, value)
-        register = format(bus.read_byte_data(i2cAddr, reg), '#011_b')[2:11]
+        bus.write_byte_data(dacAddress, reg, value)
+        register = format(bus.read_byte_data(dacAddress, reg), '#011_b')[2:11]
         print("Register %s is: %s"%(reg, register))
 
 
@@ -131,6 +80,6 @@ with SMBus(bus=1, force=True) as bus:
     elif args.i:
         init9068()
     else:
-        for r in theregs.keys():
-            register = format(bus.read_byte_data(i2cAddr, r), '#011_b')[2:11]
+        for r in sorted(theregs.keys()):
+            register = format(bus.read_byte_data(dacAddress, r), '#011_b')[2:11]
             print(f'Register {r:3} is: {register}')
