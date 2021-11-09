@@ -172,11 +172,11 @@ def listenRemote():
                         remCode = data.keycode
                         if data.keystate >= 1: # Only on key down event, 2 is held down
                             if (remCode == btnVolUp) or (remCode == btnVolDwn):
-                                if (curVol > volMax) and (remCode == btnVolUp):
+                                if (curVol >= volMax) and (remCode == btnVolUp):
                                     curVol = volMax
                                 elif (remCode == btnVolUp):
                                     curVol += volStep
-                                if (remCode == btnVolDwn) and (curVol < 0):
+                                if (remCode == btnVolDwn) and (curVol <= 0):
                                     curVol = 0
                                 elif (remCode == btnVolDwn):
                                         curVol -= volStep
