@@ -17,7 +17,7 @@ import pprint
 import subprocess
 import RPi.GPIO as GPIO
 import spidev
-import smbus
+#import smbus
 from time import*
 from datetime import timedelta as timedelta
 from threading import Thread
@@ -43,16 +43,20 @@ from urllib.parse import urlencode
 import ssl
 import re
 import fnmatch
+import ast
+from configparser import ConfigParser, BasicInterpolation
+from smbus2 import SMBus
 #sleep(3.0)
-#________________________________________________________________________________________
-#	
-#   ______            _____                        __  _                 
-#  / ____/___  ____  / __(_)___ ___  ___________ _/ /_(_)___  ____     _ 
-# / /   / __ \/ __ \/ /_/ / __ `/ / / / ___/ __ `/ __/ / __ \/ __ \   (_)
-#/ /___/ /_/ / / / / __/ / /_/ / /_/ / /  / /_/ / /_/ / /_/ / / / /  _   
-#\____/\____/_/ /_/_/ /_/\__, /\__,_/_/   \__,_/\__/_/\____/_/ /_/  (_)  
-#                       /____/
-#
+
+#  Configuration
+configFile = '/home/volumio/bladelius/ConfigurationFiles/config.ini'
+
+options = ConfigParser(inline_comment_prefixes=(';',), interpolation=BasicInterpolation())
+options.read(configFile)  # File used to store product configuration
+menuItems = ast.literal_eval(options['SETTINGS-MENU']['menuItems'])  # Holds the items for the Settings Menu
+registerValues = ast.literal_eval(options['SETTINGS-MENU']['registerValues'])  # Holds the register settings
+dacAddress = int(options['DAC']['dacaddress'], 16)  # TODO Don't assume there's a DAC present
+
 ScreenList = ['No-Spectrum']
 
 NowPlayingLayoutSave=open('/home/volumio/bladelius/ConfigurationFiles/LayoutSet.txt').readline().rstrip()
@@ -77,14 +81,7 @@ if NowPlayingLayoutSave != NowPlayingLayout:
 #config for timers:
 oledPlayFormatRefreshTime = 1.5
 oledPlayFormatRefreshLoopCount = 3
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#   _____ __             __            __     _____       _ __  _                      
-#  / ___// /_____ ______/ /_      ____/ /__  / __(_)___  (_) /_(_)___  ____  _____   _ 
-#  \__ \/ __/ __ `/ ___/ __/_____/ __  / _ \/ /_/ / __ \/ / __/ / __ \/ __ \/ ___/  (_)
-# ___/ / /_/ /_/ / /  / /_/_____/ /_/ /  __/ __/ / / / / / /_/ / /_/ / / / (__  )  _   
-#/____/\__/\__,_/_/   \__/      \__,_/\___/_/ /_/_/ /_/_/\__/_/\____/_/ /_/____/  (_)  
-#     
+
 GPIO.setmode(GPIO.BCM) 
 GPIO.setwarnings(False)
 
@@ -113,6 +110,7 @@ STATE_QUEUE_MENU = 1
 STATE_LIBRARY_INFO = 2
 STATE_SCREEN_MENU = 3
 STATE_OTHER_INPUT = 4
+STATE_SETTINGS_MENU = 5
 
 UPDATE_INTERVAL = 0.034
 
@@ -136,6 +134,8 @@ oled.playlistoptions = []
 oled.queue = []
 oled.libraryFull = []
 oled.libraryNames = []
+oled.settingsMenu = menuItems # Used for pop up menu
+oled.registerValues = registerValues
 oled.volumeControlDisabled = True
 oled.volume = 100
 now = datetime.now()                       #current date and time
@@ -179,26 +179,21 @@ oled.repeatonce = False
 oled.shuffle = False
 oled.mute = False
 oled.dimLevel = 1
+oled.lastState = -1  # Used to remember where we were before entering the Menu
+oled.syncMode = False  # When we play DSD512 we need to set Sync Mode of the DAC
 
-# Declare files to save status varialbe
+# Declare files to save status variables
 file_mute = mute
 file_vol = vol
 file_input = theinput
 file_power = power
 selectedInput = 0
+menuLevel = 0  # Used to track what level we are at in the settings menu
 dimLevels = [0, 75, 150, 255]  #use oled.contrast(level) range of 0-255
 
 image = Image.new('RGB', (oled.WIDTH, oled.HEIGHT))  #for Pixelshift: (oled.WIDTH + 4, oled.HEIGHT + 4)) 
 oled.clear()
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#	
-#    ______            __           
-#   / ____/___  ____  / /______   _ 
-#  / /_  / __ \/ __ \/ __/ ___/  (_)
-# / __/ / /_/ / / / / /_(__  )  _   
-#/_/    \____/_/ /_/\__/____/  (_)  
-#
+
 font = load_font('Oxanium-Bold.ttf', 18)                       #used for Artist ('Oxanium-Bold.ttf', 20)  
 font2 = load_font('Oxanium-Light.ttf', 12)                     #used for all menus
 font3 = load_font('Oxanium-Regular.ttf', 16)                   #used for Song ('Oxanium-Regular.ttf', 18) 
@@ -222,16 +217,7 @@ fontSource = load_font('NotoSans-Bold.ttf', 32)         # used for displaying th
 #above are the "imports" for the fonts. 
 #After the name of the font comes a number, this defines the Size (height) of the letters. 
 #Just put .ttf file in the 'Volumio-OledUI/fonts' directory and make an import like above. 
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#
-#   _____ __                  ____                __                _          
-#  / ___// /_____ _____  ____/ / /_  __  __      / /   ____  ____ _(_)____   _ 
-#  \__ \/ __/ __ `/ __ \/ __  / __ \/ / / /_____/ /   / __ \/ __ `/ / ___/  (_)
-# ___/ / /_/ /_/ / / / / /_/ / /_/ / /_/ /_____/ /___/ /_/ / /_/ / / /__   _   
-#/____/\__/\__,_/_/ /_/\__,_/_.___/\__, /     /_____/\____/\__, /_/\___/  (_)  
-#                                 /____/                  /____/               
-#
+
 def StandByWatcher():
 # listens to GPIO 26. If Signal is High, everything is fine, raspberry will keep doing it's shit.
 # If GPIO 26 is Low, Raspberry will shutdown.
@@ -261,15 +247,7 @@ def sigterm_handler(signal, frame):
     bladelius.cleanup()
     sleep(1)
     sys.exit()
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#
-#    ________        ___       __                        
-#   /  _/ __ \      /   | ____/ /_______  __________   _ 
-#   / // /_/ /_____/ /| |/ __  / ___/ _ \/ ___/ ___/  (_)
-# _/ // ____/_____/ ___ / /_/ / /  /  __(__  |__  )  _   
-#/___/_/         /_/  |_\__,_/_/   \___/____/____/  (_)  
-#   
+
 def GetIP():
     lanip = GetLANIP()
     LANip = str(lanip.decode('ascii'))
@@ -298,15 +276,7 @@ def GetWLANIP():
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output = p.communicate()[0]
     return output[:-1]
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#    ____              __        __  __          
-#   / __ )____  ____  / /_      / / / /___     _ 
-#  / __  / __ \/ __ \/ __/_____/ / / / __ \   (_)
-# / /_/ / /_/ / /_/ / /_/_____/ /_/ / /_/ /  _   
-#/_____/\____/\____/\__/      \____/ .___/  (_)  
-#                                 /_/            
-#
+
 signal.signal(signal.SIGTERM, sigterm_handler)
 if StandbyActive and firstStart:
     StandByListen = threading.Thread(target=StandByWatcher, daemon=True)
@@ -315,16 +285,7 @@ if StandbyActive and firstStart:
        firstStart = False
 
 GetIP()
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#
-#    ____  _            __                  __  __          __      __           
-#   / __ \(_)________  / /___ ___  __      / / / /___  ____/ /___ _/ /____     _ 
-#  / / / / / ___/ __ \/ / __ `/ / / /_____/ / / / __ \/ __  / __ `/ __/ _ \   (_)
-# / /_/ / (__  ) /_/ / / /_/ / /_/ /_____/ /_/ / /_/ / /_/ / /_/ / /_/  __/  _   
-#/_____/_/____/ .___/_/\__,_/\__, /      \____/ .___/\__,_/\__,_/\__/\___/  (_)  
-#            /_/            /____/           /_/                                 
-#
+
 def display_update_service():
     while UPDATE_INTERVAL > 0 and not oled.ShutdownFlag:
         prevTime = time()
@@ -345,16 +306,7 @@ def display_update_service():
         cimg = image.crop((0, 0, oled.WIDTH, oled.HEIGHT)) 
         oled.display(cimg)
         sleep(UPDATE_INTERVAL)
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#
-#   ____  __      _           __ _           
-#  / __ \/ /_    (_)__  _____/ /( )_____   _ 
-# / / / / __ \  / / _ \/ ___/ __/// ___/  (_)
-#/ /_/ / /_/ / / /  __/ /__/ /_  (__  )  _   
-#\____/_.___/_/ /\___/\___/\__/ /____/  (_)  
-#          /___/                             
-#
+
 def SetState(status):
     oled.state = status
     if oled.state == STATE_PLAYER:
@@ -367,16 +319,9 @@ def SetState(status):
         oled.modal = ScreenSelectMenu(oled.HEIGHT, oled.WIDTH)
     elif oled.state == STATE_OTHER_INPUT:
         oled.modal = OtherInputScreen(oled.HEIGHT, oled.WIDTH)
+    elif oled.state == STATE_SETTINGS_MENU:
+        oled.modal = SettingsScreen(oled.HEIGHT, oled.WIDTH, oled.settingsMenu, oled.registerValues, oled.lastState)
 
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#        
-#    ____        __              __  __                ____              
-#   / __ \____ _/ /_____ _      / / / /___ _____  ____/ / /__  _____   _ 
-#  / / / / __ `/ __/ __ `/_____/ /_/ / __ `/ __ \/ __  / / _ \/ ___/  (_)
-# / /_/ / /_/ / /_/ /_/ /_____/ __  / /_/ / / / / /_/ / /  __/ /     _   
-#/_____/\__,_/\__/\__,_/     /_/ /_/\__,_/_/ /_/\__,_/_/\___/_/     (_)  
-#   
 def JPGPathfinder(String):
     print('JPGPathfinder')
     albumstring = String
@@ -503,7 +448,7 @@ def onPushState(data):
         if newSamplerate is None:
             newSamplerate = ' '
             oled.activeSamplerate = newSamplerate
-        
+        #print("dsd512") if newSamplerate == "22.58 MHz" else 0
         if 'bitrate' in data:
             oled.bitrate = data['bitrate']
         else:
@@ -520,7 +465,24 @@ def onPushState(data):
         if newBitdepth is None:
             newBitdepth = ' '
             oled.activeBitdepth = newBitdepth  
-            
+        #print(f"Current BitDepth is {oled.activeBitdepth} and the sample rate is {str(oled.activeSamplerate)} ")
+
+        if newSamplerate == "22.58 MHz":
+            if not oled.syncMode: # check if we're already in sync mode
+                #set sync mode
+                oled.syncMode = True
+                syncMode =    0b00000100  # Enable Sync Mode for DSD512
+                print("Playing DSDS512, set syncMode")
+                with SMBus(1) as i2cBus:
+                    i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+        elif oled.syncMode:
+            # get out of sync mode
+            oled.syncMode = False
+            syncMode =    0b00000000  # ASync Mode for everything but DSD512
+            print("Put DAC into ASync Mode")
+            with SMBus(1) as i2cBus:
+                    i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+
         if 'position' in data:                      # current position in queue
             oled.playPosition = data['position']    # didn't work well with volumio ver. < 2.5
         else:
@@ -683,21 +645,12 @@ def onPushCollectionStats(data):
     oled.activeSongs = str(newSongs)
     oled.activePlaytime = str(newPlaytime)
 	
-    if oled.state == STATE_LIBRARY_INFO and oled.playState == 'info':                                   #this is the "Media-Library-Info-Screen"
+    if oled.state == STATE_LIBRARY_INFO and oled.playState == 'info':          #this is the "Media-Library-Info-Screen"
        oled.modal.UpdateLibraryInfo() 
 
 def onPushQueue(data):
     oled.queue = [track['name'] if 'name' in track else 'no track' for track in data]
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#	
-#    ____  _            __                  __  ___                _           
-#   / __ \(_)________  / /___ ___  __      /  |/  /__  ____  __  _( )_____   _ 
-#  / / / / / ___/ __ \/ / __ `/ / / /_____/ /|_/ / _ \/ __ \/ / / /// ___/  (_)
-# / /_/ / (__  ) /_/ / / /_/ / /_/ /_____/ /  / /  __/ / / / /_/ / (__  )  _   
-#/_____/_/____/ .___/_/\__,_/\__, /     /_/  /_/\___/_/ /_/\__,_/ /____/  (_)  
-#            /_/            /____/                                             
-#
+
 class NowPlayingScreen():
     print("Inside NowPlayingScreen")
     def __init__(self, height, width):
@@ -819,14 +772,8 @@ class NowPlayingScreen():
                 self.draw.rectangle((Screen4barLineX , Screen4barLineThick1, Screen4barLineX+Screen4barwidth, Screen4barLineThick2), outline=Screen4barLineBorder, fill=Screen4barLineFill)
                 self.draw.rectangle((self.bar+Screen4barLineX-Screen4barNibbleWidth, Screen4barThick1, Screen4barX+self.bar+Screen4barNibbleWidth, Screen4barThick2), outline=Screen4barBorder, fill=Screen4barFill)
             image.paste(self.image, (0, 0))
-#_____________________________________________________________________________________________________________
-#   _____ __                  ____               _____                         
-#  / ___// /_____ _____  ____/ / /_  __  __     / ___/_____________  ___  ____ 
-#  \__ \/ __/ __ `/ __ \/ __  / __ \/ / / /_____\__ \/ ___/ ___/ _ \/ _ \/ __ \
-# ___/ / /_/ /_/ / / / / /_/ / /_/ / /_/ /_____/__/ / /__/ /  /  __/  __/ / / /
-#/____/\__/\__,_/_/ /_/\__,_/_.___/\__, /     /____/\___/_/   \___/\___/_/ /_/ 
-#                                 /____/                                       
-#_____________________________________________________________________________________________________________
+
+# Standby Screen
         elif oled.playState == 'stop':
             self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
             #self.draw.text((oledtext03), oled.time, font=fontClock, fill='white')
@@ -880,6 +827,82 @@ class OtherInputScreen():
         self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
         self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
         image.paste(self.image, (0, 0))
+
+class SettingsScreen():
+    def __init__(self, height, width, menuList, registerValues, lastState):
+        self.height = height
+        self.width = width
+        self.menuList = menuList  # Dictionary and values are lists
+        self.registerValues = registerValues
+        self.topLevel = list(menuList.keys())
+        self.totalOptions = len(self.topLevel)
+        self.selectedLevel = -1
+        self.selectedLevelText = ''
+        self.lastSelectedLevelText = ''
+        self.selectedOption = -1
+        self.selectedOptionText = ''
+        self.lastSelectedOptionText = ''
+        self.lastSelectedOption = -1
+        self.lastState = lastState
+        self.menuText = ''
+        self.menuTitle = ''
+        self.image = Image.new('RGB', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
+
+    def UpdateInputScreen(self):
+        self.image = Image.new('RGB', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
+    
+    def RegisterWrites(self, level, option):
+        reg = self.registerValues[level][option][0]
+        bitsToSet = self.registerValues[level][option][1]
+        bitsToClear = self.registerValues[level][option][2]
+
+        with SMBus(1) as i2cBus:  # Just assume bus number is 1
+            currentBits = i2cBus.read_byte_data(dacAddress, reg)
+            newBits = (currentBits | bitsToSet) & ~bitsToClear  # Yeah, not very programmer like ...
+            i2cBus.write_byte_data(dacAddress, 28, newBits)
+        
+        print(f"In Menu System at {self.lastSelectedLevelText} and set it to {self.lastSelectedOptionText}")
+        print(f"We set Register {reg} to {format(newBits, '#011_b')[2:11]}")
+
+    def ChooseLevel(self):  # Menu button was pushed on the remote
+        if self.selectedOption != -1:
+            #print(f"Just entered ChooseLevel and selectedLevelText is {self.selectedLevelText} and selectedOption is {self.selectedOption}")
+            self.RegisterWrites(self.lastSelectedLevelText, self.lastSelectedOption)
+        if self.selectedLevel < self.totalOptions - 1:
+            self.selectedLevel += 1
+            self.menuText = self.topLevel[self.selectedLevel]
+            self.selectedLevelText = self.menuText
+            #print(f'In ChooseLevel self.menuText is {self.menuText} and selectedLevel is {self.selectedLevel} out of {self.totalOptions}')
+        else:
+            bladelius.inMenu = False
+            SetState(self.lastState)
+            #print(f'Ran SetState with {self.lastState} setting, oled.state is {oled.state}')
+
+    def ChooseOption(self):
+        totalOptions = len(self.menuList[self.selectedLevelText])
+        if self.selectedOption < totalOptions - 1:
+            self.selectedOption += 1 
+        else:
+            self.selectedOption = 0
+        #print('In ChooseOption self.SelectedLevelText is', self.selectedLevelText)
+        #print('In ChooseOption self.menuList[self.menuText] is ', self.menuList[self.selectedLevelText])
+        self.menuTitle = self.selectedLevelText
+        self.menuText = self.menuList[self.selectedLevelText][self.selectedOption]
+        #print('In ChooseOption self.MenuText is', self.menuText)
+        self.lastSelectedLevelText = self.selectedLevelText    # Save state so registers can be set when you leave level
+        self.lastSelectedOptionText = self.menuText
+        self.lastSelectedOption = self.selectedOption
+
+    def DrawOn(self, image):
+        self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
+        w,h = font2.getsize(self.menuTitle)
+        self.draw.text(((self.width-w)/2, 4), self.menuTitle, font=font2, fill='white')
+        w,h = fontSource.getsize(self.menuText)
+        self.draw.text(((self.width-w)/2, 15), self.menuText, font=fontSource, fill='white')
+        image.paste(self.image, (0, 0))
+
 
 class MenuScreen():
     def __init__(self, height, width):
@@ -972,15 +995,7 @@ class ScreenSelectMenu():
         if self.totaloptions == 0:
             self.menuText[0].DrawOn(image, (oledEmptyListTextPosition))                  #Here is the position of the list entrys from left set (42)
 
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#	
-#    ____        __  __                 ____                 __  _                      
-#   / __ )__  __/ /_/ /_____  ____     / __/_  ______  _____/ /_(_)___  ____  _____   _ 
-#  / __  / / / / __/ __/ __ \/ __ \   / /_/ / / / __ \/ ___/ __/ / __ \/ __ \/ ___/  (_)
-# / /_/ / /_/ / /_/ /_/ /_/ / / / /  / __/ /_/ / / / / /__/ /_/ / /_/ / / / (__  )  _   
-#/_____/\__,_/\__/\__/\____/_/ /_/  /_/  \__,_/_/ /_/\___/\__/_/\____/_/ /_/____/  (_)  
-#                                                                                       	
+
 def ButtonA_PushEvent(hold_time):
     oled.dimLevel += 1
     if oled.dimLevel == 4:
@@ -1074,15 +1089,7 @@ def RightKnob_PushEvent(hold_time):
             NowPlayingLayout = Screen
             SetState(STATE_PLAYER)
             volumioIO.emit('stop') 
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#    
-#    ____        __  __                  _       __      __       __                  
-#   / __ )__  __/ /_/ /_____  ____      | |     / /___ _/ /______/ /_  ___  _____   _ 
-#  / __  / / / / __/ __/ __ \/ __ \_____| | /| / / __ `/ __/ ___/ __ \/ _ \/ ___/  (_)
-# / /_/ / /_/ / /_/ /_/ /_/ / / / /_____/ |/ |/ / /_/ / /_/ /__/ / / /  __/ /     _   
-#/_____/\__,_/\__/\__/\____/_/ /_/      |__/|__/\__,_/\__/\___/_/ /_/\___/_/     (_)  
-#   
+
 ButtonA_Push = PushButton(oledBtnA, max_time=2)
 ButtonA_Push.setCallback(ButtonA_PushEvent)
 ButtonB_Push = PushButton(oledBtnB, max_time=2)
@@ -1097,15 +1104,7 @@ ButtonD_Push.setCallback(ButtonD_PushEvent)
 #RightKnob_Push.setCallback(RightKnob_PushEvent)
 #RightKnob_Rotation = RotaryEncoder(oledRtrLeft, oledRtrRight, pulses_per_cycle=4)
 #RightKnob_Rotation.setCallback(RightKnob_RotaryEvent)
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#    
-#    ____              __        __                          
-#   / __ )____  ____  / /_      / /   ____  ____ _____     _ 
-#  / __  / __ \/ __ \/ __/_____/ /   / __ \/ __ `/ __ \   (_)
-# / /_/ / /_/ / /_/ / /_/_____/ /___/ /_/ / /_/ / /_/ /  _   
-#/_____/\____/\____/\__/     /_____/\____/\__, /\____/  (_)  
-#    
+
 show_logo(oledBootLogo, oled)
 if ledActive and firstStart:
     SysStart()
@@ -1120,16 +1119,7 @@ else:
 #sleep(2.0)
 sleep(1)
 SetState(STATE_PLAYER)
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#  
-#   __  __          __      __          ________                        __         
-#  / / / /___  ____/ /___ _/ /____     /_  __/ /_  ________  ____ _____/ /____   _ 
-# / / / / __ \/ __  / __ `/ __/ _ \     / / / __ \/ ___/ _ \/ __ `/ __  / ___/  (_)
-#/ /_/ / /_/ / /_/ / /_/ / /_/  __/    / / / / / / /  /  __/ /_/ / /_/ (__  )  _   
-#\____/ .___/\__,_/\__,_/\__/\___/    /_/ /_/ /_/_/   \___/\__,_/\__,_/____/  (_)  
-#    /_/ 
-#     
+
 updateThread = Thread(target=display_update_service)
 updateThread.daemon = True
 updateThread.start()
@@ -1173,25 +1163,29 @@ def PlaypositionHelper():
             oled.date = now.strftime("%d.%m.%Y")
         sleep(1.0)
 
+def menuHandler():
+    if not bladelius.inMenu:  # Enter in Menu System
+        bladelius.inMenu = True
+        oled.lastState = oled.state
+        #print(f'in menuHandler and just set lastState to {oled.lastState}')
+        menuLevel = 0
+        SetState(STATE_SETTINGS_MENU)
+
+    if bladelius.remCode == bladelius.btnVolUp:
+        oled.modal.ChooseOption()
+
+    if bladelius.remCode == bladelius.btnMenu:
+        oled.modal.ChooseLevel()
+
+
 PlayPosHelp = threading.Thread(target=PlaypositionHelper, daemon=True)
 PlayPosHelp.start()
 
 remoteProcess = threading.Thread(target=bladelius.listenRemote, daemon=True)
 remoteProcess.start()
-#________________________________________________________________________________________
-#________________________________________________________________________________________
-#	
-#    __  ___      _             __                          
-#   /  |/  /___ _(_)___        / /   ____  ____  ____     _ 
-#  / /|_/ / __ `/ / __ \______/ /   / __ \/ __ \/ __ \   (_)
-# / /  / / /_/ / / / / /_____/ /___/ /_/ / /_/ / /_/ /  _   
-#/_/  /_/\__,_/_/_/ /_/     /_____/\____/\____/ .___/  (_)  
-#  
+
+
 while True:
-#    print('State: ', oled.state)
-#    print('palyState: ', oled.playState)
-#    print('newStatus: ', newStatus)
-#    print(oled.modal)
     if emit_track and oled.stateTimeout < 4.5:
         emit_track = False
         try:
@@ -1226,6 +1220,11 @@ while True:
 # This is for the added remote code
     if not bladelius.events.empty():
         event = bladelius.events.get_nowait()
+        #print(f"The Remote Code is {bladelius.remCode}")
+        if bladelius.remCode == bladelius.btnMenu:  # This is the "Menu" button on the remote
+            menuHandler()
+        elif bladelius.remCode == bladelius.btnVolUp and bladelius.inMenu:
+            menuHandler()
         if bladelius.curInput != selectedInput:
             if list(bladelius.theInputs.keys())[bladelius.curInput] == 'STREAM':
                 volumioIO.emit('getState', '', onPushState)

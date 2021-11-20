@@ -24,10 +24,11 @@ import json
 import ast
 from configparser import ConfigParser, BasicInterpolation
 
-btnVolUp =  'KEY_VOLUMEUP' #2075 #"vol-up"  # 0x1B
+btnVolUp =  'KEY_VOLUMEUP'   #2075 #"vol-up"   # 0x1B
 btnVolDwn = 'KEY_VOLUMEDOWN' #2076 #"vol-dwn"  # 0x1C
-btnSrcUp =  'KEY_NEXT' #2071 #"next"  # 0x17
-btnSrcDwn = 'KEY_PREVIOUS' #2072 #"prev"  # 0x18
+btnSrcUp =  'KEY_NEXT'       #2071 #"next"     # 0x17
+btnSrcDwn = 'KEY_PREVIOUS'   #2072 #"prev"     # 0x18
+btnMenu =   'KEY_MODE'       #2073 #"display"  # 0x19
 
 volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
             80, 84, 88, 92, 94, 96, 98, 100, 102, 104, 106, 108, 
@@ -59,6 +60,7 @@ whatDoWeHave = []
 theInputs = {}
 theOutputs = {}
 theBoards ={}
+inMenu = False  # Used to reassign volume button for menu navigation
 
 standbyFlag = 1  # Power up initialization turns things ON
 
@@ -134,17 +136,17 @@ def setInput(prevInput, theInput, dacAddress):
     curInputBoard = list(theInputs.values())[theInput][4]
     print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
     print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
-    if cur9068state != last9068state:
-        if cur9068state == 'I2S':
-            inputSelect = 0b10000100  # Setting for Auto DSD/I2S
-            syncMode =    0b00000100  # Enable Sync Mode for I2S
-        else:
-            inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
-            syncMode =    0b00000000  # Disable Sync Mode for SPDIF
-        with SMBus(1) as i2cBus:
-            i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
-            i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
-            #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
+    # if cur9068state != last9068state:  # 211120 Not needed since XMOS code change
+    #     if cur9068state == 'I2S':
+    #         inputSelect = 0b10000100  # Setting for Auto DSD/I2S
+    #         syncMode =    0b00000100  # Enable Sync Mode for I2S
+    #     else:
+    #         inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
+    #         syncMode =    0b00000000  # Disable Sync Mode for SPDIF
+    #     with SMBus(1) as i2cBus:
+    #         i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
+    #         i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+    #         #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
     if curInputBoard != lastInputBoard:
         pcfAddress = list(theBoards.values())[0][0]
         bitsToSet = list(theBoards.values())[0][1]
@@ -162,16 +164,17 @@ def setInput(prevInput, theInput, dacAddress):
 def listenRemote():
 #    try:
         while True:
-            global curVol, prevInput, curInput  # Needs to be global so values can be passed back to bladelius.py
+            global curVol, prevInput, curInput, remCode  # Needs to be global so values can be passed back to bladelius.py
             for key, mask in selector.select():
                 device = key.fileobj
                 for event in device.read():
                     if event.type == ecodes.EV_KEY:
-                        events.put(event)
+                        #events.put(event)
                         data = categorize(event)
                         remCode = data.keycode
                         if data.keystate >= 1: # Only on key down event, 2 is held down
-                            if (remCode == btnVolUp) or (remCode == btnVolDwn):
+                            events.put(event)
+                            if ((remCode == btnVolUp) or (remCode == btnVolDwn)) and not inMenu:
                                 if (curVol >= volMax) and (remCode == btnVolUp):
                                     curVol = volMax
                                 elif (remCode == btnVolUp):
