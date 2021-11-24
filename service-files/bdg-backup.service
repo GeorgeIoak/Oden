@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup current Input and Volume Settings
+After=multi-user.target
+
+[Service]
+RemainAfterExit=yes
+ExecStop=/lib/systemd/system-shutdown/bdg-backup.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -42,7 +42,7 @@ volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
 
 
 curInput = 0  # What Source Input are we currently at
-prevInput = 0  # What Source Input was before
+prevInput = -1  # What Source Input was before
 remCode = ''  # Current remote code with toggle bit masked off
 curVol = 0
 old_vol = dbVol = 0
@@ -76,6 +76,12 @@ numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
 
+volFile = '/home/volumio/bladelius/var/vol'     # File used to store state
+volTemp = '/mnt/ramdisk/vol'                    # RAM disk storage
+inputFile = '/home/volumio/bladelius/var/input'
+inputTemp = '/mnt/ramdisk/input'
+thedata = '' # Used for holding the file contents when read back
+
 # Open SPI bus instance for PGA2320
 try:
     pga2320 = spidev.SpiDev()
@@ -96,20 +102,26 @@ try:
 except (FileNotFoundError, PermissionError)as error:
     print("Something wrong with IR or Rotary Encoder", error)
 
-# RAM Drive setup on /var/ram
+# RAM Drive setup on /mnt/ramdisk
 # TODO: need to use RAM Drive until shutting down
-# Environmental variables are probably easier
+''' Service file is created to copy RAM Drive contents to the var directory
+    so we just need to read the states in when we power up and set the system
+    correctly
+'''
 
-# Write volume to file
-def save_vol(curVol):
-    with open( vol, 'w') as f:  #f = open('/home/volumio/bladelius/var/vol', 'w')
-        f.write(str(curVol))
+# File handling for reading and saving system state
+def file_service(filename, rw, filedata=''):
+    with open(filename, rw) as f:
+        if rw == 'r':
+            thedata = int(f.read())
+            return thedata
+        else:
+            f.write(str(filedata))
 
-# Get volume from file
-def get_vol():
-    with open( vol, 'r') as f:  #f = open('/home/volumio/bladelius/var/vol', 'r')
-        a = int(f.read())
-    return a
+curInput = file_service(inputFile, 'r')
+curVol = file_service(volFile, 'r')
+print(f"Initialized curInput to {curInput} and volume to {curVol}")
+
 
 def createBits(theInput, pcfAddress):
     bitsToSet   = list(theInputs.values())[theInput][1]
@@ -186,6 +198,7 @@ def listenRemote():
                                 print("Current volume is: ", curVol)
                                 dbVol = volTable[curVol]
                                 pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
+                                file_service(volTemp, 'w', curVol)
                             if (remCode == btnSrcUp) or (remCode == btnSrcDwn):
                                 prevInput = curInput
                                 if curInput == numInputs and remCode == btnSrcUp:
@@ -202,6 +215,7 @@ def listenRemote():
                                             curInput -= 1
                                 setInput(prevInput, curInput, dacAddress)
                                 print("Current Input is: ", list(theInputs.keys())[curInput])
+                                file_service(inputTemp, 'w', curInput)
                     if event.type == ecodes.EV_REL:
                         events.put(event)
                         curVol += event.value

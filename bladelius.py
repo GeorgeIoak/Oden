@@ -50,10 +50,14 @@ from smbus2 import SMBus
 
 #  Configuration
 configFile = '/home/volumio/bladelius/ConfigurationFiles/config.ini'
-
+setupFile = bladelius.setupFile
 options = ConfigParser(inline_comment_prefixes=(';',), interpolation=BasicInterpolation())
 options.read(configFile)  # File used to store product configuration
+settings = ConfigParser(inline_comment_prefixes=(
+    ';',), interpolation=BasicInterpolation())
+settings.read(setupFile)  # File used to get product settings
 menuItems = ast.literal_eval(options['SETTINGS-MENU']['menuItems'])  # Holds the items for the Settings Menu
+menusettings = ast.literal_eval(settings['PRODUCT']['menusettings'])  # Last menu settings
 registerValues = ast.literal_eval(options['SETTINGS-MENU']['registerValues'])  # Holds the register settings
 dacAddress = int(options['DAC']['dacaddress'], 16)  # TODO Don't assume there's a DAC present
 
@@ -861,10 +865,15 @@ class SettingsScreen():
         with SMBus(1) as i2cBus:  # Just assume bus number is 1
             currentBits = i2cBus.read_byte_data(dacAddress, reg)
             newBits = (currentBits | bitsToSet) & ~bitsToClear  # Yeah, not very programmer like ...
-            i2cBus.write_byte_data(dacAddress, 28, newBits)
+            i2cBus.write_byte_data(dacAddress, reg, newBits)
         
         print(f"In Menu System at {self.lastSelectedLevelText} and set it to {self.lastSelectedOptionText}")
         print(f"We set Register {reg} to {format(newBits, '#011_b')[2:11]}")
+
+        menusettings[self.lastSelectedLevelText][1] = newBits  # Update our stored Menu Settings
+        settings.set('PRODUCT', 'menusettings', json.dumps(menusettings))
+        with open(setupFile, 'w') as theFile:
+            settings.write(theFile)
 
     def ChooseLevel(self):  # Menu button was pushed on the remote
         if self.selectedOption != -1:
@@ -1115,7 +1124,8 @@ if ledActive and firstStart:
     Processor.start()
     firstStart = False
 else: 
-    firstStart = False
+    pass
+#GI    firstStart = False
 #sleep(2.0)
 sleep(1)
 SetState(STATE_PLAYER)
@@ -1218,8 +1228,9 @@ while True:
         secvar = 0.0
 
 # This is for the added remote code
-    if not bladelius.events.empty():
-        event = bladelius.events.get_nowait()
+    if not bladelius.events.empty() or firstStart:
+        if not firstStart:
+            event = bladelius.events.get_nowait()
         #print(f"The Remote Code is {bladelius.remCode}")
         if bladelius.remCode == bladelius.btnMenu:  # This is the "Menu" button on the remote
             menuHandler()
@@ -1236,5 +1247,7 @@ while True:
             #print("the event is", event)
             #print("End of the loop and curVol is", bladelius.curVol)
             selectedInput = bladelius.curInput
+        firstStart = False
+
 
 sleep(0.02)

@@ -29,6 +29,8 @@ settings = ConfigParser(inline_comment_prefixes=(';',), interpolation=BasicInter
 settings.read(setupFile)  # File used to get product settings
 
 theregs = ast.literal_eval(options['9068-INIT']['theregs'])
+menusettings = ast.literal_eval(
+    settings['PRODUCT']['menusettings'])  # Last menu settings
 
 # Routine to scan and return a list of I2C Devices on I2C1
 def scan(force=False):
