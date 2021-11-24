@@ -191,7 +191,7 @@ file_mute = mute
 file_vol = vol
 file_input = theinput
 file_power = power
-selectedInput = 0
+selectedInput = -1
 menuLevel = 0  # Used to track what level we are at in the settings menu
 dimLevels = [0, 75, 150, 255]  #use oled.contrast(level) range of 0-255
 
