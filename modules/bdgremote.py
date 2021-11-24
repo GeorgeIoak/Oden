@@ -199,7 +199,7 @@ def listenRemote():
                                 dbVol = volTable[curVol]
                                 pga2320.writebytes([dbVol, dbVol, dbVol, dbVol]) # 1 PGA2320/channel so 4 writes
                                 file_service(volTemp, 'w', curVol)
-                            if (remCode == btnSrcUp) or (remCode == btnSrcDwn) and not inMenu:
+                            if ((remCode == btnSrcUp) or (remCode == btnSrcDwn)) and not inMenu:
                                 prevInput = curInput
                                 if curInput == numInputs and remCode == btnSrcUp:
                                     curInput = 0
