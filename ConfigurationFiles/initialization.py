@@ -58,6 +58,8 @@ def init9068(dacAddress, theregs):
     with SMBus(bus=1, force=True) as bus:
         for reg,value in theregs.items():
             bus.write_byte_data(dacAddress, reg, value)
+        for reg, value in menusettings.items():  # Stored as a dict with list 
+            bus.write_byte_data(dacAddress, value[0], value[1])
 
 # TODO: Change to getting all devices from config.ini
 tyr = ast.literal_eval(options['TYR']['pcfDevices'])
