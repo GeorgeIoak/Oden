@@ -185,6 +185,7 @@ def listenRemote():
                         data = categorize(event)
                         remCode = data.keycode
                         if data.keystate >= 1: # Only on key down event, 2 is held down
+                            print("inMenu is", inMenu)
                             events.put(event)
                             if ((remCode == btnVolUp) or (remCode == btnVolDwn)) and not inMenu:
                                 if (curVol >= volMax) and (remCode == btnVolUp):
@@ -205,7 +206,7 @@ def listenRemote():
                                     curInput = 0
                                 else:
                                     if remCode == btnSrcUp:
-                                        print("SOURCE + was pressed")
+                                        print("SOURCE + was pressed", inMenu)
                                         curInput += 1
                                     else:
                                         print("SOURCE - was pressed")

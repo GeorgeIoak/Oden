@@ -219,6 +219,7 @@ fontClock = load_font('DSG.ttf', 30)                           #used for clock
 fontDate = load_font('Oxanium-Light.ttf', 12)           #used for Date 'DSEG7Classic-Regular.ttf'
 fontIP = load_font('Oxanium-Light.ttf', 12)             #used for IP 'DSEG7Classic-Regular.ttf'
 fontSource = load_font('NotoSans-Bold.ttf', 32)         # used for displaying the current source input
+fontMenu = load_font('NotoSans-Bold.ttf', 28)         # used for displaying the current source input
 #above are the "imports" for the fonts. 
 #After the name of the font comes a number, this defines the Size (height) of the letters. 
 #Just put .ttf file in the 'Volumio-OledUI/fonts' directory and make an import like above. 
@@ -842,12 +843,7 @@ class SettingsScreen():
         self.topLevel = list(menuList.keys())
         self.totalOptions = len(self.topLevel)
         self.selectedLevel = -1
-        self.selectedLevelText = ''
-        self.lastSelectedLevelText = ''
         self.selectedOption = -1
-        self.selectedOptionText = ''
-        self.lastSelectedOptionText = ''
-        self.lastSelectedOption = -1
         self.lastState = lastState
         self.menuText = ''
         self.menuTitle = ''
@@ -868,59 +864,52 @@ class SettingsScreen():
             newBits = (currentBits | bitsToSet) & ~bitsToClear  # Yeah, not very programmer like ...
             i2cBus.write_byte_data(dacAddress, reg, newBits)
         
-        print(f"In Menu System at {self.lastSelectedLevelText} and set it to {self.lastSelectedOptionText}")
+        #print(f"In Menu System at {self.MenuTitle} and set it to {self.menuText}")
         print(f"We set Register {reg} to {format(newBits, '#011_b')[2:11]}")
 
-        menusettings[self.lastSelectedLevelText][1] = newBits  # Update our stored Menu Settings
+        menusettings[self.menuTitle][1] = newBits  # Update our stored Menu Settings
         settings.set('PRODUCT', 'menusettings', json.dumps(menusettings))
-        
         # Update our stored Menu Settings
-        menuselections[self.lastSelectedLevelText][0] = self.lastSelectedOptionText
-        menuselections[self.lastSelectedLevelText][1] = self.lastSelectedOption
         settings.set('PRODUCT', 'menuselections', json.dumps(menuselections))
         with open(setupFile, 'w') as theFile:
             settings.write(theFile)
 
-    def ChooseLevel(self):  # Menu button was pushed on the remote
-        if self.selectedOption != -1:
-            #print(f"Just entered ChooseLevel and selectedLevelText is {self.selectedLevelText} and selectedOption is {self.selectedOption}")
-            self.RegisterWrites(self.lastSelectedLevelText, self.lastSelectedOption)
-        if self.selectedLevel < self.totalOptions - 1:
-            self.selectedLevel += 1
-            self.menuText = self.topLevel[self.selectedLevel]
-            self.selectedLevelText = self.menuText
-            #print(f'In ChooseLevel self.menuText is {self.menuText} and selectedLevel is {self.selectedLevel} out of {self.totalOptions}')
-        else:
+    def ChooseLevel(self):  # Menu button was pressed
+        self.selectedLevel += 1
+        print(f"Just entered ChooseLevel and menuText is {self.menuText}, selectedOption is {self.selectedOption} and selectedLevel is {self.selectedLevel}")
+        if self.selectedLevel > (len(menuItems) - 1):
+            self.selectedLevel = -1
             bladelius.inMenu = False
             SetState(self.lastState)
-            #print(f'Ran SetState with {self.lastState} setting, oled.state is {oled.state}')
-
-    def ChooseOption(self):
-        totalOptions = len(self.menuList[self.selectedLevelText])
-        if self.selectedOption < totalOptions - 1:
-            self.selectedOption += 1 
             print(
-                f"in ChooseOption and incremented self.selectedOption to {self.selectedOption}")
+                f'Ran SetState with {self.lastState} setting, oled.state is {oled.state}')
+        else:
+            self.menuTitle = list(menuselections.keys())[self.selectedLevel]
+            self.menuText = menuselections[self.menuTitle][0]
+            self.selectedOption = menuselections[self.menuTitle][1]
+            print(
+                f'In ChooseLevel self.menuText is {self.menuText} and selectedLevel is {self.selectedLevel} out of {self.totalOptions}')
+
+    def ChooseOption(self):  # Vol button was pressed
+        if self.selectedOption < (len(menuItems[self.menuTitle]) - 1):
+            self.selectedOption += 1 
         else:
             self.selectedOption = 0
-            self.selectedOption = menuselections[self.selectedLevelText][1]  # What was previously selected
-            print(
-                f"in ChooseOption, else branch, and retrieved self.selectedOption to {self.selectedOption}")
-        #print('In ChooseOption self.SelectedLevelText is', self.selectedLevelText)
-        #print('In ChooseOption self.menuList[self.menuText] is ', self.menuList[self.selectedLevelText])
-        self.menuTitle = self.selectedLevelText
-        self.menuText = self.menuList[self.selectedLevelText][self.selectedOption]
-        #print('In ChooseOption self.MenuText is', self.menuText)
-        self.lastSelectedLevelText = self.selectedLevelText    # Save state so registers can be set when you leave level
-        self.lastSelectedOptionText = self.menuText
-        self.lastSelectedOption = self.selectedOption
+        self.menuText = menuItems[self.menuTitle][self.selectedOption]
+        menuselections[self.menuTitle][0] = self.menuText
+        menuselections[self.menuTitle][1] = self.selectedOption
+        self.UpdateInputScreen()
+        self.RegisterWrites(self.menuTitle,
+                            self.selectedOption)
+        print(
+            f"self.selectedOption is {self.selectedOption} and checking {(len(menuItems[self.menuTitle]) - 1)}")
 
     def DrawOn(self, image):
         self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-        w,h = font3.getsize(self.menuTitle)
-        self.draw.text(((self.width-w)/2, 4), self.menuTitle, font=font3, fill='white')
+        w,h = fontMenu.getsize(self.menuTitle)
+        self.draw.text(((self.width-w)/2, 0), self.menuTitle, font=fontMenu, anchor='lt', fill='white')
         w,h = fontSource.getsize(self.menuText)
-        self.draw.text(((self.width-w)/2, 20), self.menuText, font=fontSource, fill='white')
+        self.draw.text(((self.width-w)/2, 15), self.menuText, font=fontSource, fill='white')
         image.paste(self.image, (0, 0))
 
 
