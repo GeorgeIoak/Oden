@@ -58,6 +58,7 @@ settings = ConfigParser(inline_comment_prefixes=(
 settings.read(setupFile)  # File used to get product settings
 menuItems = ast.literal_eval(options['SETTINGS-MENU']['menuItems'])  # Holds the items for the Settings Menu
 menusettings = ast.literal_eval(settings['PRODUCT']['menusettings'])  # Last menu settings
+menuselections = ast.literal_eval(settings['PRODUCT']['menuselections'])  # Last menu items selected
 registerValues = ast.literal_eval(options['SETTINGS-MENU']['registerValues'])  # Holds the register settings
 dacAddress = int(options['DAC']['dacaddress'], 16)  # TODO Don't assume there's a DAC present
 
@@ -872,6 +873,11 @@ class SettingsScreen():
 
         menusettings[self.lastSelectedLevelText][1] = newBits  # Update our stored Menu Settings
         settings.set('PRODUCT', 'menusettings', json.dumps(menusettings))
+        
+        # Update our stored Menu Settings
+        menuselections[self.lastSelectedLevelText][0] = self.lastSelectedOptionText
+        menuselections[self.lastSelectedLevelText][1] = self.lastSelectedOption
+        settings.set('PRODUCT', 'menuselections', json.dumps(menuselections))
         with open(setupFile, 'w') as theFile:
             settings.write(theFile)
 
@@ -893,8 +899,13 @@ class SettingsScreen():
         totalOptions = len(self.menuList[self.selectedLevelText])
         if self.selectedOption < totalOptions - 1:
             self.selectedOption += 1 
+            print(
+                f"in ChooseOption and incremented self.selectedOption to {self.selectedOption}")
         else:
             self.selectedOption = 0
+            self.selectedOption = menuselections[self.selectedLevelText][1]  # What was previously selected
+            print(
+                f"in ChooseOption, else branch, and retrieved self.selectedOption to {self.selectedOption}")
         #print('In ChooseOption self.SelectedLevelText is', self.selectedLevelText)
         #print('In ChooseOption self.menuList[self.menuText] is ', self.menuList[self.selectedLevelText])
         self.menuTitle = self.selectedLevelText
@@ -906,10 +917,10 @@ class SettingsScreen():
 
     def DrawOn(self, image):
         self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
-        w,h = font2.getsize(self.menuTitle)
-        self.draw.text(((self.width-w)/2, 4), self.menuTitle, font=font2, fill='white')
+        w,h = font3.getsize(self.menuTitle)
+        self.draw.text(((self.width-w)/2, 4), self.menuTitle, font=font3, fill='white')
         w,h = fontSource.getsize(self.menuText)
-        self.draw.text(((self.width-w)/2, 15), self.menuText, font=fontSource, fill='white')
+        self.draw.text(((self.width-w)/2, 20), self.menuText, font=fontSource, fill='white')
         image.paste(self.image, (0, 0))
 
 
