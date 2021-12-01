@@ -105,18 +105,19 @@ with open(setupFile, 'w') as theFile:
 
 # Now set the initial states of the outputs
 
-def changeOutputs(powerUpDown):
+def changeOutputs(powerUpDown, skip=''):
     for i in theOutputs.keys():
-        pcfAddress = theOutputs[i][0]
-        with SMBus(1) as i2cBus:
-            pcfBits = i2cBus.read_byte(pcfAddress)
-        if ((theOutputs[i][2]) ^ powerUpDown) == 0:
-            pcfBits &= ~(1<<theOutputs[i][1])
-        elif ((theOutputs[i][2]) ^ powerUpDown) == 1:
-            pcfBits |= (1 << theOutputs[i][1])
-        with SMBus(1) as i2cBus:
-            i2cBus.write_byte(pcfAddress, pcfBits)
-            print("Changed to", format(pcfBits, '#011_b')[2:11])
+        if i != skip:
+            pcfAddress = theOutputs[i][0]
+            with SMBus(1) as i2cBus:
+                pcfBits = i2cBus.read_byte(pcfAddress)
+            if ((theOutputs[i][2]) ^ powerUpDown) == 0:
+                pcfBits &= ~(1<<theOutputs[i][1])
+            elif ((theOutputs[i][2]) ^ powerUpDown) == 1:
+                pcfBits |= (1 << theOutputs[i][1])
+            with SMBus(1) as i2cBus:
+                i2cBus.write_byte(pcfAddress, pcfBits)
+                print("Changed to", format(pcfBits, '#011_b')[2:11])
 
 changeOutputs(1) # 1 for PowerUp and 0 for PowerDown
 

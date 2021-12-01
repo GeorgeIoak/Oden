@@ -24,11 +24,12 @@ import json
 import ast
 from configparser import ConfigParser, BasicInterpolation
 
-btnVolUp =  'KEY_VOLUMEUP'   #2075 #"vol-up"   # 0x1B
-btnVolDwn = 'KEY_VOLUMEDOWN' #2076 #"vol-dwn"  # 0x1C
-btnSrcUp =  'KEY_NEXT'       #2071 #"next"     # 0x17
-btnSrcDwn = 'KEY_PREVIOUS'   #2072 #"prev"     # 0x18
-btnMenu =   'KEY_MODE'       #2073 #"display"  # 0x19
+btnVolUp =   'KEY_VOLUMEUP'   #2075 #"vol-up"   # 0x1B
+btnVolDwn =  'KEY_VOLUMEDOWN' #2076 #"vol-dwn"  # 0x1C
+btnSrcUp =   'KEY_NEXT'       #2071 #"next"     # 0x17
+btnSrcDwn =  'KEY_PREVIOUS'   #2072 #"prev"     # 0x18
+btnMenu =    'KEY_MODE'       #2073 #"display"  # 0x19
+btnStandby = 'KEY_SLEEP'      #2068 #"standby"  # 0x14
 
 volTable = [2, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 76,
             80, 84, 88, 92, 94, 96, 98, 100, 102, 104, 106, 108, 
@@ -119,7 +120,7 @@ def file_service(filename, rw, filedata=''):
             f.write(str(filedata))
 
 curInput = file_service(inputFile, 'r')
-curVol = file_service(volFile, 'r')
+#curVol = file_service(volFile, 'r')  # Mike didn't want to change volume at powerup
 print(f"Initialized curInput to {curInput} and volume to {curVol}")
 
 

@@ -1036,8 +1036,8 @@ def ButtonD_PushEvent(hold_time):
         print('ButtonD short press event')
         print('Current Standby State is', bladelius.standbyFlag)
         bladelius.standbyFlag ^= 1
-        bladelius.changeOutputs(bladelius.standbyFlag)
-        if bladelius.standbyFlag:
+        bladelius.changeOutputs(bladelius.standbyFlag, "Relay Control")
+        if not bladelius.standbyFlag:  # 0 means go into Standby
             oled.dimLevel = 0
             oled.hide()
         else:
@@ -1236,6 +1236,8 @@ while True:
             menuHandler()
         elif bladelius.remCode == bladelius.btnVolUp and bladelius.inMenu:
             menuHandler()
+        if bladelius.remCode == bladelius.btnStandby and not bladelius.inMenu:
+            ButtonD_PushEvent(1)  # Call standby routine used for the front panel button
         if bladelius.curInput != selectedInput:
             if list(bladelius.theInputs.keys())[bladelius.curInput] == 'STREAM':
                 volumioIO.emit('getState', '', onPushState)
