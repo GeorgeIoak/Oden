@@ -1006,18 +1006,19 @@ class ScreenSelectMenu():
 
 
 def ButtonA_PushEvent(hold_time):
-    oled.dimLevel += 1
-    if oled.dimLevel == 4:
-        oled.dimLevel = 0
-        oled.hide()
-    if oled.dimLevel == 1:
-        oled.show()
-    oled.contrast(dimLevels[oled.dimLevel])
-    print('ButtonA short press event', oled.dimLevel)
+    if not bladelius.standbyFlag:
+        oled.dimLevel += 1
+        if oled.dimLevel == 4:
+            oled.dimLevel = 0
+            oled.hide()
+        if oled.dimLevel == 1:
+            oled.show()
+        oled.contrast(dimLevels[oled.dimLevel])
+        print('ButtonA short press event', oled.dimLevel)
 
 
 def ButtonB_PushEvent(hold_time):
-    if hold_time < 2:
+    if (hold_time < 2) and not bladelius.standbyFlag:
         print('ButtonB short press event')
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
@@ -1025,7 +1026,7 @@ def ButtonB_PushEvent(hold_time):
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
 def ButtonC_PushEvent(hold_time):
-    if hold_time < 2:
+    if (hold_time < 2) and not bladelius.standbyFlag:
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 0)

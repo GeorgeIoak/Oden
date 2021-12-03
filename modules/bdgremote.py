@@ -103,13 +103,6 @@ try:
 except (FileNotFoundError, PermissionError)as error:
     print("Something wrong with IR or Rotary Encoder", error)
 
-# RAM Drive setup on /mnt/ramdisk
-# TODO: need to use RAM Drive until shutting down
-''' Service file is created to copy RAM Drive contents to the var directory
-    so we just need to read the states in when we power up and set the system
-    correctly
-'''
-
 # File handling for reading and saving system state
 def file_service(filename, rw, filedata=''):
     with open(filename, rw) as f:
@@ -123,14 +116,12 @@ curInput = file_service(inputFile, 'r')
 #curVol = file_service(volFile, 'r')  # Mike didn't want to change volume at powerup
 print(f"Initialized curInput to {curInput} and volume to {curVol}")
 
-
 def createBits(theInput, pcfAddress):
     bitsToSet   = list(theInputs.values())[theInput][1]
     bitsToClear = list(theInputs.values())[theInput][2]
     with SMBus(1) as i2cBus:
         currentBits = i2cBus.read_byte(pcfAddress)
     pcfBits = (currentBits | bitsToSet) & ~bitsToClear
-
 
 def setInput(prevInput, theInput, dacAddress):
     pcfAddress = list(theInputs.values())[theInput][0]
@@ -184,9 +175,14 @@ def listenRemote():
                     if event.type == ecodes.EV_KEY:
                         #events.put(event)
                         data = categorize(event)
-                        remCode = data.keycode
+                        if standbyFlag:  # Not in Standby so pass remote codes
+                            remCode = data.keycode
+                        elif (data.keycode != btnStandby):  # Clear all codes except for Standby
+                            remCode = ""
+                        else:
+                            remCode = data.keycode
                         if data.keystate >= 1: # Only on key down event, 2 is held down
-                            print("inMenu is", inMenu)
+                            #print("inMenu is", inMenu)
                             events.put(event)
                             if ((remCode == btnVolUp) or (remCode == btnVolDwn)) and not inMenu:
                                 if (curVol >= volMax) and (remCode == btnVolUp):
@@ -218,7 +214,7 @@ def listenRemote():
                                 setInput(prevInput, curInput, dacAddress)
                                 print("Current Input is: ", list(theInputs.keys())[curInput])
                                 file_service(inputTemp, 'w', curInput)
-                    if event.type == ecodes.EV_REL:
+                    if event.type == ecodes.EV_REL and not standbyFlag:
                         events.put(event)
                         curVol += event.value
                         if curVol < 0:
