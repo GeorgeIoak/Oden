@@ -4,7 +4,7 @@ Description=Bladelius Control
 [Service]
 Type=simple
 WorkingDirectory=/home/volumio
-ExecStart=/home/volumio/src/Python-3.9.1/bin/python3.9 -u /home/volumio/bladelius/bladelius.py
+ExecStart=/usr/bin/python3 -u /home/volumio/bladelius/bladelius.py
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=bladelius
