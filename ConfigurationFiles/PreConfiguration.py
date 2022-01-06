@@ -2,7 +2,7 @@
 StandbyActive = False
 
 #config for NR1-UI-Remote
-NR1UIRemoteActive = True
+NR1UIRemoteActive = False
 
 #config for LED
 ledActive = False

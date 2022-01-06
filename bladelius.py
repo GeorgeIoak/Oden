@@ -759,7 +759,8 @@ class NowPlayingScreen():
                 self.volume = 'Vol.: ' + str(bladelius.curVol) + '%'
                 self.draw.text((Screen4text29), self.volume, font=font4, fill='white')
             #self.draw.text((Screen4ActualPlaytimeText), str(timedelta(seconds=round(float(oled.seek) / 1000))), font=font4, fill='white')
-            self.draw.text((Screen4ActualPlaytimeText), str(int(oled.seek / 1000)), font=font4, fill='white')
+            if oled.seek:
+                self.draw.text((Screen4ActualPlaytimeText), str(int(oled.seek / 1000)), font=font4, fill='white')
             if oled.duration != None:
                 self.playbackPoint = oled.seek / oled.duration / 10
                 self.bar = Screen2barwidth * self.playbackPoint / 100
