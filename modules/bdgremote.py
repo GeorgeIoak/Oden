@@ -123,7 +123,7 @@ def createBits(theInput, pcfAddress):
         currentBits = i2cBus.read_byte(pcfAddress)
     pcfBits = (currentBits | bitsToSet) & ~bitsToClear
 
-def setInput(prevInput, theInput, dacAddress):
+def setInput(prevInput, theInput, dacAddress, firstStart=False):
     pcfAddress = list(theInputs.values())[theInput][0]
     bitsToSet = list(theInputs.values())[theInput][1]
     bitsToClear = list(theInputs.values())[theInput][2]
@@ -140,7 +140,7 @@ def setInput(prevInput, theInput, dacAddress):
     curInputBoard = list(theInputs.values())[theInput][4]
     print("Current Input is %d , Previous Input was %d"%(theInput, prevInput))
     print("Current Mode is %s , Previous Mode was %s"%(cur9068state, last9068state))
-    if cur9068state != last9068state:  # 211120 Not needed since XMOS code change
+    if (cur9068state != last9068state) or firstStart:  # 211120 Not needed since XMOS code change
         if cur9068state == 'I2S':
             inputSelect = 0b10000100  # Setting for Auto DSD/I2S
     #         syncMode =    0b00000100  # Enable Sync Mode for I2S
@@ -151,7 +151,7 @@ def setInput(prevInput, theInput, dacAddress):
             i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
     #         i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
             #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
-    if curInputBoard != lastInputBoard:
+    if (curInputBoard != lastInputBoard) or firstStart:
         pcfAddress = list(theBoards.values())[0][0]
         bitsToSet = list(theBoards.values())[0][1]
         bitsToClear = list(theBoards.values())[0][2]

@@ -1224,7 +1224,7 @@ while True:
             event = bladelius.events.get_nowait()
         #print(f"The Remote Code is {bladelius.remCode}")
         else:
-            bladelius.setInput(-1, bladelius.curInput, bladelius.dacAddress)
+            bladelius.setInput(-1, bladelius.curInput, bladelius.dacAddress, firstStart)
         if bladelius.remCode == bladelius.btnMenu:  # This is the "Menu" button on the remote
             menuHandler()
         elif bladelius.remCode == bladelius.btnVolUp and bladelius.inMenu:
