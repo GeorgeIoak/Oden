@@ -479,7 +479,7 @@ def onPushState(data):
             newStatus = data['status']
 
         if 'volume' in data:            #get volume on startup and remote control
-            oled.volume = int(data['volume'])
+            oled.volume = int(data['volume'] or 100)  # Can be None, this will set to 100
         else:
             oled.volume = 100
 
