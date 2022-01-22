@@ -90,6 +90,7 @@ try:
     pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
     # 1 PGA2320/channel so 4 writes
     pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])  # dbVol is 0 at power up so confirm mute state
+    print(f"Muted PGA2320 by writing {dbVol} to the part")
 except:
     print("Could not connect to SPI1 bus")
 
