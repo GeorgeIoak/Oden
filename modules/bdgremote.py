@@ -88,6 +88,8 @@ try:
     pga2320 = spidev.SpiDev()
     pga2320.open(SPI_PORT, SPI_DEVICE)
     pga2320.max_speed_hz = 1000000  # PGA2320 max SPI Speed is 6.25MHz
+    # 1 PGA2320/channel so 4 writes
+    pga2320.writebytes([dbVol, dbVol, dbVol, dbVol])  # dbVol is 0 at power up so confirm mute state
 except:
     print("Could not connect to SPI1 bus")
 
