@@ -101,7 +101,7 @@ settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs 
 settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
 settings.set('PRODUCT', 'dacPhonoBoards', json.dumps(
     selectBoards))  # Update the settings to change input board
-settings.set('PRODUCT', 'dacAddress', dacAddress)
+settings.set('PRODUCT', 'dacAddress', str(dacAddress))
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
