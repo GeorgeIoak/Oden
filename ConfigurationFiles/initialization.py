@@ -81,6 +81,8 @@ elif set(oden) <= set(i2cDevices):
 if (dacAddress in i2cDevices):
     whatDoWeHave.append("DAC")
     init9068(dacAddress, theregs)
+else:
+    dacAddress = 0x00
 
 # Check for a Digital Board
 if any(item in i2cDevices for item in digitalBoard):
@@ -99,6 +101,7 @@ settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs 
 settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
 settings.set('PRODUCT', 'dacPhonoBoards', json.dumps(
     selectBoards))  # Update the settings to change input board
+settings.set('PRODUCT', 'dacAddress', dacAddress)
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
