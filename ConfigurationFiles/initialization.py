@@ -65,7 +65,7 @@ def init9068(dacAddress, theregs):
 tyr = ast.literal_eval(options['TYR']['pcfDevices'])
 oden = ast.literal_eval(options['ODEN']['pcfDevices'])
 digitalBoard = ast.literal_eval(options['DIGITAL']['pcfDevices'])
-dacAddress = int(options['DAC']['dacaddress'], 16)
+dacAddress = int(options['DAC']['dacaddress'])
 
 # Are we in an Oden or a Tyr/Ask
 if set(tyr) <= set(i2cDevices):
