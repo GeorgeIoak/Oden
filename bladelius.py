@@ -750,13 +750,13 @@ class NowPlayingScreen():
             if oled.shuffle:
                 self.draw.text((Screen4text35), oledshuffle, font=labelfont, fill='white')
             if not oled.mute:
-                self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
+#                self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
             else:
-                self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
+#                self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
             # TODO Change volume to display PGA2320 Volume Level (bladelius.curVol)
             if oled.volume >= 0:
                 #self.volume = 'Vol.: ' + str(oled.volume) + '%'
-                self.volume = 'Vol.: ' + str(bladelius.curVol) + '%'
+                self.volume = 'Vol.: ' + str(bladelius.curVol)  # + '%'
                 self.draw.text((Screen4text29), self.volume, font=font4, fill='white')
             #self.draw.text((Screen4ActualPlaytimeText), str(timedelta(seconds=round(float(oled.seek) / 1000))), font=font4, fill='white')
             if oled.seek:
@@ -820,7 +820,7 @@ class OtherInputScreen():
         self.draw.text((10, 4), list(bladelius.theInputs.keys())[bladelius.curInput], font=fontSource, fill='white')
         self.draw.text((175, 4), str(bladelius.curVol), font=fontSource, fill='white')
         self.draw.text((oledtext04), oled.IP, font=fontIP, fill='white')
-        self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
+#        self.draw.text((oledtext05), oled.date, font=fontDate, fill='white')
         self.draw.text((oledtext09), oledlibraryInfo, font=iconfontBottom, fill='white')
         image.paste(self.image, (0, 0))
 
