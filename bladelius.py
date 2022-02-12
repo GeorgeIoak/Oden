@@ -749,9 +749,9 @@ class NowPlayingScreen():
                     self.draw.text((Screen4text34), str(1), font=font4, fill='white')
             if oled.shuffle:
                 self.draw.text((Screen4text35), oledshuffle, font=labelfont, fill='white')
-            if not oled.mute:
+#            if not oled.mute:
 #                self.draw.text((Screen4text30), oledvolumeon, font=labelfontfa, fill='white')
-            else:
+#            else:
 #                self.draw.text((Screen4text31), oledvolumeoff, font=labelfontfa, fill='white')
             # TODO Change volume to display PGA2320 Volume Level (bladelius.curVol)
             if oled.volume >= 0:
