@@ -120,16 +120,16 @@ if (dacAddress in i2cDevices):
 else:
     dacAddress = 0x00
 
+# Check for a Digital Board
+if any(item in i2cDevices for item in digitalBoard):
+    whatDoWeHave.append("DIGITAL")
+
 # Check for the CM4 Baseboard
 if (usbHubAddress in i2cDevices):
     whatDoWeHave.append("CM4-BASE")
     initUSBHub()
 else:
     usbHubAddress = 0x00
-
-# Check for a Digital Board
-if any(item in i2cDevices for item in digitalBoard):
-    whatDoWeHave.append("DIGITAL")
 
 for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))
