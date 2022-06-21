@@ -218,9 +218,9 @@ def listenRemote():
                                 setInput(prevInput, curInput, dacAddress)
                                 print("Current Input is: ", list(theInputs.keys())[curInput])
                                 file_service(inputTemp, 'w', curInput)
-                    if event.type == ecodes.EV_REL and not standbyFlag:
+                    if event.type == ecodes.EV_REL and standbyFlag:  # standbyFlag = 1 means system is ON
                         events.put(event)
-                        curVol += event.value
+                        curVol -= event.value  # Reversed logic because of wiring
                         if curVol < 0:
                             curVol = 0
                         elif curVol > volMax:

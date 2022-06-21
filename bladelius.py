@@ -1008,7 +1008,7 @@ def ButtonA_PushEvent(hold_time):
 
 
 def ButtonB_PushEvent(hold_time):
-    if (hold_time < 2) and not bladelius.standbyFlag:
+    if (hold_time < 2) and bladelius.standbyFlag:  # standbyFlag = 1 means system is ON
         print('ButtonB short press event')
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
@@ -1016,7 +1016,7 @@ def ButtonB_PushEvent(hold_time):
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
 def ButtonC_PushEvent(hold_time):
-    if (hold_time < 2) and not bladelius.standbyFlag:
+    if (hold_time < 2) and bladelius.standbyFlag:
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 0)
