@@ -75,7 +75,7 @@ theOutputs.update(ast.literal_eval(theProduct['PRODUCT']['theoutputs']))
 theBoards.update(ast.literal_eval(theProduct['PRODUCT']['dacphonoboards']))
 numInputs = len(theInputs) - 1  # Used for loops
 
-dacAddress = int(theProduct['PRODUCT']['dacaddress'])
+dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
 
 volFile = '/home/volumio/bladelius/var/vol'     # File used to store state
 volTemp = '/mnt/ramdisk/vol'                    # RAM disk storage

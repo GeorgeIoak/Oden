@@ -65,7 +65,7 @@ def init9068(dacAddress, theregs):
 tyr = ast.literal_eval(options['TYR']['pcfDevices'])
 oden = ast.literal_eval(options['ODEN']['pcfDevices'])
 digitalBoard = ast.literal_eval(options['DIGITAL']['pcfDevices'])
-dacAddress = int(options['DAC']['dacaddress'])
+dacAddress = int(options['DAC']['dacaddress'], 16)
 
 # Are we in an Oden or a Tyr/Ask
 if set(tyr) <= set(i2cDevices):
@@ -101,7 +101,7 @@ settings.set('PRODUCT', 'theInputs', json.dumps(theInputs)) # Update the inputs 
 settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the inputs dictionary
 settings.set('PRODUCT', 'dacPhonoBoards', json.dumps(
     selectBoards))  # Update the settings to change input board
-settings.set('PRODUCT', 'dacAddress', str(dacAddress))
+settings.set('PRODUCT', 'dacAddress', str(hex(dacAddress)))
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
