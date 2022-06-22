@@ -995,7 +995,7 @@ class ScreenSelectMenu():
             self.menuText[0].DrawOn(image, (oledEmptyListTextPosition))                  #Here is the position of the list entrys from left set (42)
 
 
-def ButtonA_PushEvent(hold_time):
+def DisplayDim_PushEvent(hold_time):
     if not bladelius.standbyFlag:
         oled.dimLevel += 1
         if oled.dimLevel == 4:
@@ -1004,27 +1004,27 @@ def ButtonA_PushEvent(hold_time):
         if oled.dimLevel == 1:
             oled.show()
         oled.contrast(dimLevels[oled.dimLevel])
-        print('ButtonA short press event', oled.dimLevel)
+        print('Disply Dim Button short press event', oled.dimLevel)
 
-
-def ButtonB_PushEvent(hold_time):
+def PreviousInput_PushEvent(hold_time):
     if (hold_time < 2) and bladelius.standbyFlag:  # standbyFlag = 1 means system is ON
-        print('ButtonB short press event')
+        print('Previous Input Button short press event')
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_PREVIOUS, 0)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
-def ButtonC_PushEvent(hold_time):
+def NextInput_PushEvent(hold_time):
     if (hold_time < 2) and bladelius.standbyFlag:
+        print('Next Input Button short press event')
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 1)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
         bladelius.IRsignal.write(ecodes.EV_KEY, ecodes.KEY_NEXT, 0)
         bladelius.IRsignal.write(ecodes.EV_SYN, ecodes.SYN_REPORT, 0)
 
-def ButtonD_PushEvent(hold_time):
+def Standby_PushEvent(hold_time):
     if hold_time < 2:
-        print('ButtonD short press event')
+        print('Standby Button short press event')
         print('Current Standby State is', bladelius.standbyFlag)
         bladelius.standbyFlag ^= 1
         bladelius.changeOutputs(bladelius.standbyFlag, "Relay Control")
@@ -1035,7 +1035,6 @@ def ButtonD_PushEvent(hold_time):
             oled.dimLevel = 3
             oled.show()
             oled.contrast(dimLevels[oled.dimLevel])
-
 
 def RightKnob_RotaryEvent(dir):
     global emit_track
@@ -1091,13 +1090,13 @@ def RightKnob_PushEvent(hold_time):
             volumioIO.emit('stop') 
 
 ButtonA_Push = PushButton(oledBtnA, max_time=2)
-ButtonA_Push.setCallback(ButtonA_PushEvent)
+ButtonA_Push.setCallback(DisplayDim_PushEvent)
 ButtonB_Push = PushButton(oledBtnB, max_time=2)
-ButtonB_Push.setCallback(ButtonB_PushEvent)
+ButtonB_Push.setCallback(NextInput_PushEvent)
 ButtonC_Push = PushButton(oledBtnC, max_time=2)
-ButtonC_Push.setCallback(ButtonC_PushEvent)
+ButtonC_Push.setCallback(PreviousInput_PushEvent)
 ButtonD_Push = PushButton(oledBtnD, max_time=2)
-ButtonD_Push.setCallback(ButtonD_PushEvent)
+ButtonD_Push.setCallback(Standby_PushEvent)
 
 # Using overlay and events
 #RightKnob_Push = PushButton(oledRtrBtn, max_time=2)
