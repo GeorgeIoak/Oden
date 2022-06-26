@@ -126,7 +126,7 @@ if any(item in i2cDevices for item in digitalBoard):
 
 # Check for the CM4 Baseboard
 if (usbHubAddress in i2cDevices):
-    #whatDoWeHave.append("CM4-BASE") # Need to add this without impacting input array
+    whatDoWeHave.append("CM4-BASE") # Need to add this without impacting input array
     initUSBHub()
 else:
     usbHubAddress = 0x00
