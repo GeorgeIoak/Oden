@@ -147,14 +147,14 @@ def setInput(prevInput, theInput, dacAddress, firstStart=False):
         if (cur9068state != last9068state) or firstStart:  # 211120 Not needed since XMOS code change
             if cur9068state == 'I2S':
                 inputSelect = 0b10000100  # Setting for Auto DSD/I2S
-        #         syncMode =    0b00000100  # Enable Sync Mode for I2S
+                syncMode =    0b00000100  # Enable Sync Mode for I2S
             else:
                 inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
-        #         syncMode =    0b00000000  # Disable Sync Mode for SPDIF
+                syncMode =    0b00000000  # Disable Sync Mode for SPDIF
             with SMBus(1) as i2cBus:
                 i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
-        #         i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
-                #print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
+                i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+                print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
     if (curInputBoard != lastInputBoard) or firstStart:
         pcfAddress = list(theBoards.values())[0][0]
         bitsToSet = list(theBoards.values())[0][1]
