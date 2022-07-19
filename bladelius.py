@@ -1229,7 +1229,8 @@ while True:
         elif bladelius.remCode == bladelius.btnVolUp and bladelius.inMenu:
             menuHandler()
         if bladelius.remCode == bladelius.btnStandby and not bladelius.inMenu:
-            ButtonD_PushEvent(1)  # Call standby routine used for the front panel button
+            # Call standby routine used for the front panel button
+            Standby_PushEvent(1)
         if bladelius.curInput != selectedInput:
             if list(bladelius.theInputs.keys())[bladelius.curInput] == 'STREAM':
                 volumioIO.emit('getState', '', onPushState)
