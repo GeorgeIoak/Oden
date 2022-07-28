@@ -62,6 +62,11 @@ sudo systemctl enable bladelius
 sudo systemctl enable bdg-backup.service
 sudo systemctl enable bdg-init.service
 
+cd bladelius
+git update-index --assume-unchanged ConfigurationFiles/setup.ini
+git update-index --assume-unchanged var/input
+git update-index --assume-unchanged var/vol
+
 echo -e "\e[92mAll done installing Oden files, please reboot...\e[0m"
 
 exit 0 #
