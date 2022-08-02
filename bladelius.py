@@ -675,7 +675,7 @@ class NowPlayingScreen():
         if newStatus != 'stop':
             self.image.paste(('black'), [0, 0, image.size[0], image.size[1]])
             #self.ArtistWidth, self.ArtistHeight = self.draw.textsize(oled.activeArtist, font=font)
-            self.ArtistWidth, self.ArtistHeight = self.draw.getbbox(
+            self.ArtistWidth, self.ArtistHeight = self.draw.textbbox(
                 oled.activeArtist, font=font)[2:4]  # textsize is being depricated
             self.ArtistStopPosition = self.ArtistWidth - self.width + ArtistEndScrollMargin
             if self.ArtistWidth >= self.width:
@@ -706,7 +706,9 @@ class NowPlayingScreen():
                 self.ArtistPosition = (int((self.width-self.ArtistWidth)/2), Screen4text01[1])  
             self.draw.text((self.ArtistPosition), oled.activeArtist, font=font, fill='white')
 
-            self.SongWidth, self.SongHeight = self.draw.textsize(oled.activeSong, font=font3)
+            #self.SongWidth, self.SongHeight = self.draw.textsize(oled.activeSong, font=font3)
+            self.SongWidth, self.SongHeight = self.draw.textbbox(
+                (0, 0), oled.activeSong, font=font3)[2:4]  # textsize is being depricated
             self.SongStopPosition = self.SongWidth - self.width + SongEndScrollMargin
             if self.SongWidth >= self.width:
                 if ScrollSongFirstRound:
