@@ -153,7 +153,7 @@ def setInput(prevInput, theInput, dacAddress, firstStart=False):
                 syncMode =    0b00000000  # Disable Sync Mode for SPDIF
             with SMBus(1) as i2cBus:
                 i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
-                i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings
+                #i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings 22/08/04
                 print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
     if (curInputBoard != lastInputBoard) or firstStart:
         pcfAddress = list(theBoards.values())[0][0]
