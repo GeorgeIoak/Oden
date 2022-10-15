@@ -146,15 +146,29 @@ def setInput(prevInput, theInput, dacAddress, firstStart=False):
     if dacAddress:
         if (cur9068state != last9068state) or firstStart:  # 211120 Not needed since XMOS code change
             if cur9068state == 'I2S':
-                inputSelect = 0b10000100  # Setting for Auto DSD/I2S
-                syncMode =    0b00000100  # Enable Sync Mode for I2S
+            #     inputSelect = 0b10000100  # Setting for Auto DSD/I2S
+            #     syncMode =    0b00000100  # Enable Sync Mode for I2S
+                reclock = 0b01110000  # GPIO2 LOW turns on reclocking
             else:
-                inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
-                syncMode =    0b00000000  # Disable Sync Mode for SPDIF
+            #     inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
+            #     syncMode =    0b00000000  # Disable Sync Mode for SPDIF
+                reclock = 0b11110000  # GPIO2 HIGH turns off reclocking
             with SMBus(1) as i2cBus:
-                i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
-                #i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings 22/08/04
-                print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
+                # i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
+                # #i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings 22/08/04
+                # print("Write to %d address, Register 28, with %d" %(dacAddress, inputSelect))
+                i2cBus.write_byte_data(dacAddress, 6, reclock)  # Set reclock or not
+                print("Write to %d address, Register 6, with %s" %
+                      (dacAddress, bin(reclock)))
+                currentBits = i2cBus.read_byte(pcfAddress)
+                if cur9068state == 'I2S':
+                    pcfBits = (currentBits | (1 << 4))  # Set PCF8574 Bit4 HIGH
+                else:
+                    pcfBits = (currentBits & ~(1 << 4))  # Set PCF8574 Bit4 LOW
+                i2cBus.write_byte(pcfAddress, pcfBits)
+                print("PCF8574 with address of %s was sent this: %s" %
+                      (hex(pcfAddress), pcfBits))
+
     if (curInputBoard != lastInputBoard) or firstStart:
         pcfAddress = list(theBoards.values())[0][0]
         bitsToSet = list(theBoards.values())[0][1]
