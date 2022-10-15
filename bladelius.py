@@ -1000,7 +1000,7 @@ class ScreenSelectMenu():
 
 
 def DisplayDim_PushEvent(hold_time):
-    if not bladelius.standbyFlag:
+    if bladelius.standbyFlag:
         oled.dimLevel += 1
         if oled.dimLevel == 4:
             oled.dimLevel = 0
@@ -1246,6 +1246,10 @@ while True:
             #print("the event is", event)
             #print("End of the loop and curVol is", bladelius.curVol)
             selectedInput = bladelius.curInput
+        if bladelius.remCode == bladelius.btnDim:
+            # Call dim routine used for the front panel button
+            print("Remote Control Dim button pressed")
+            DisplayDim_PushEvent(1)
         firstStart = False
 
 
