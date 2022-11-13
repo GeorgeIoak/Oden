@@ -149,11 +149,11 @@ def setInput(prevInput, theInput, dacAddress, firstStart=False):
             if cur9068state == 'I2S':
             #     inputSelect = 0b10000100  # Setting for Auto DSD/I2S
             #     syncMode =    0b00000100  # Enable Sync Mode for I2S
-                reclock = 0b01110000  # GPIO2 LOW turns on reclocking
+                reclock = 0b01110001  # GPIO2 LOW turns on reclocking, leave GPIO1 as lock status
             else:
             #     inputSelect = 0b10000001  # Setting for SPDIF Input ONLY
             #     syncMode =    0b00000000  # Disable Sync Mode for SPDIF
-                reclock = 0b11110000  # GPIO2 HIGH turns off reclocking
+                reclock = 0b11110001  # GPIO2 HIGH turns off reclocking, leave GPIO1 as lock status
             with SMBus(1) as i2cBus:
                 # i2cBus.write_byte_data(dacAddress, 28, inputSelect)  # Register 28 is Input Select
                 # #i2cBus.write_byte_data(dacAddress, 66, syncMode)  # register 66 is Sync Settings 22/08/04
@@ -200,9 +200,14 @@ def listenRemote():
                             remCode = ""
                         else:
                             remCode = data.keycode
+                        if ((data.keystate == 0) and (remCode == btnStandby)):
+                            events.put(event)  # Put Standby event in queue only if key is released
                         if data.keystate >= 1: # Only on key down event, 2 is held down
                             #print("inMenu is", inMenu)
-                            events.put(event)
+                            if (remCode == btnStandby):
+                                remCode = ""  # Ignore Standby button Down Events
+                            else:
+                                events.put(event)
                             if ((remCode == btnVolUp) or (remCode == btnVolDwn)) and not inMenu:
                                 if (curVol >= volMax) and (remCode == btnVolUp):
                                     curVol = volMax
