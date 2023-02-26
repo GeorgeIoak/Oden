@@ -102,7 +102,7 @@ oden = ast.literal_eval(options['ODEN']['pcfDevices'])
 digitalBoard = ast.literal_eval(options['DIGITAL']['pcfDevices'])
 dacAddress = int(options['DAC']['dacaddress'], 16)
 usbHubAddress = int(options['CM4-BASE']['usbhubaddress'], 16)
-phonoBoard = int(options['PHONO']['pcfDevices'], 16)
+phonoBoard = int(options['PHONO']['U37'], 16)
 
 # Are we in an Oden or a Tyr/Ask
 if set(tyr) <= set(i2cDevices):
