@@ -102,6 +102,7 @@ oden = ast.literal_eval(options['ODEN']['pcfDevices'])
 digitalBoard = ast.literal_eval(options['DIGITAL']['pcfDevices'])
 dacAddress = int(options['DAC']['dacaddress'], 16)
 usbHubAddress = int(options['CM4-BASE']['usbhubaddress'], 16)
+phonoBoard = int(options['PHONO']['pcfDevices'], 16)
 
 # Are we in an Oden or a Tyr/Ask
 if set(tyr) <= set(i2cDevices):
@@ -130,6 +131,13 @@ if (usbHubAddress in i2cDevices):
     initUSBHub()
 else:
     usbHubAddress = 0x00
+
+# Check for the Phono Board
+if (phonoBoard in i2cDevices):
+    whatDoWeHave.append("PHONO")
+    isPhono = True
+else:
+    isPhono = False
 
 for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))

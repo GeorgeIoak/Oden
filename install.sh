@@ -21,7 +21,7 @@ git clone https://github.com/GeorgeIoak/Oden bladelius
 
 pip3 install --upgrade setuptools pip wheel
 pip3 install --upgrade luma.oled
-pip3 install psutil socketIO-client pycurl gpiozero readchar numpy requests evdev config selectors
+pip3 install socketIO-client requests evdev config selectors
 pip3 install ConfigParser
 echo -e "\e[92mFinished Installing Python Modules...\e[0m"
 # Replace system files
