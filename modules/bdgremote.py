@@ -77,6 +77,9 @@ theBoards.update(ast.literal_eval(theProduct['PRODUCT']['dacphonoboards']))
 numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
+phonoBoard = int(theProduct['PRODUCT']['phonoboard'], 16)
+isPhono = theProduct['PRODUCT']['hasphono']
+isDigital = theProduct['PRODUCT']['hasdigital']
 
 volFile = '/home/volumio/bladelius/var/vol'     # File used to store state
 volTemp = '/mnt/ramdisk/vol'                    # RAM disk storage
@@ -179,6 +182,19 @@ def setInput(prevInput, theInput, dacAddress, firstStart=False):
         pcfBits = (currentBits | bitsToSet) & ~bitsToClear
         if curInputBoard != 'A':
             with SMBus(1) as i2cBus:
+                i2cBus.write_byte(pcfAddress, pcfBits)
+                pcfState = format(pcfBits, '#011_b')[2:11]
+                print("PCF8574 with address of %s was sent this: %s" %
+                    (hex(pcfAddress), pcfState))
+        #  Hardcode this in for now, my brain hurts
+        if isPhono:
+            with SMBus(1) as i2cBus:
+                pcfAddress = phonoBoard
+                currentBits = i2cBus.read_byte(pcfAddress)
+                if curInputBoard == 'P':
+                    pcfBits = (currentBits & ~(1 << 1))  # Set PCF8574 Bit 1 LOW
+                else:
+                    pcfBits = (currentBits | (1 << 1))  # Set PCF8574 Bit 1 HIGH
                 i2cBus.write_byte(pcfAddress, pcfBits)
                 pcfState = format(pcfBits, '#011_b')[2:11]
                 print("PCF8574 with address of %s was sent this: %s" %

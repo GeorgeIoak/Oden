@@ -138,6 +138,7 @@ if (phonoBoard in i2cDevices):
     isPhono = True
 else:
     isPhono = False
+    phonoBoard = 0x00
 
 for i in whatDoWeHave:
     #theInputs.update(json.loads(options[i]['inputarray']))
@@ -153,6 +154,8 @@ settings.set('PRODUCT', 'theOutputs', json.dumps(theOutputs)) # Update the input
 settings.set('PRODUCT', 'dacPhonoBoards', json.dumps(
     selectBoards))  # Update the settings to change input board
 settings.set('PRODUCT', 'dacAddress', str(hex(dacAddress)))
+settings.set('PRODUCT', 'phonoBoard', str(hex(phonoBoard)))
+settings.set('PRODUCT', 'hasphono', str(isPhono))
 
 with open(setupFile, 'w') as theFile:
     settings.write(theFile)
