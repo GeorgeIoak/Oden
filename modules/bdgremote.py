@@ -78,8 +78,8 @@ numInputs = len(theInputs) - 1  # Used for loops
 
 dacAddress = int(theProduct['PRODUCT']['dacaddress'], 16)
 phonoBoard = int(theProduct['PRODUCT']['phonoboard'], 16)
-isPhono = theProduct['PRODUCT']['hasphono']
-isDigital = theProduct['PRODUCT']['hasdigital']
+isPhono = theProduct.getboolean('PRODUCT', 'hasphono')
+isDigital = theProduct.getboolean('PRODUCT', 'hasdigital')
 
 volFile = '/home/volumio/bladelius/var/vol'     # File used to store state
 volTemp = '/mnt/ramdisk/vol'                    # RAM disk storage
